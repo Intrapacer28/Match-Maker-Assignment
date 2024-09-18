@@ -13,6 +13,16 @@ const app = express();
 const port = 4786;
 // const primaryWallet = Keypair.fromSecretKey(bs58.decode(process.env.WALLET_PRIVATE_KEY || ''));
 
+const rateLimiter = require('express-rate-limit');
+
+const limiter = rateLimiter({
+   windowMs: 1 * 60 * 1000, // 1 minute
+   max: 100, // Limit each IP to 100 requests per windowMs
+});
+
+app.use(limiter);
+
+
 app.use(bodyParser.json());
 
 app.get('/' , (req,res) => {
@@ -55,10 +65,14 @@ app.post('/webhook',  
             //     console.log("BUY TOKEN" , tokenToBuy)
             //     // await buyToken(primaryWallet,TOKEN_MINT,tokenToBuy,false,false)
             // }
+
+                        
         })
 
      res.sendStatus(200);
 });
+
+
    
 app.listen(port, () => {
      console.log(`Server listening on port ${port}`);
