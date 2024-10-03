@@ -1,5 +1,5 @@
 export const DISTRIBUTION_AMOUNT = 0.01;
-export const DISTRIBUTION_NUM = 100
+export const DISTRIBUTION_NUM = 10;
 export const TOKEN_MINT = "9hjZ8UTNrNWt3YUTHVpvzdQjNbp64NbKSDsbLqKR6BZc"
 export const ADDITIONAL_FEE = 0.005;
 export const BUY_AMOUNT = 0.01 ;

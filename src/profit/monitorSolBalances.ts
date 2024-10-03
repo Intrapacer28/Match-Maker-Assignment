@@ -11,39 +11,34 @@ import {
 // Importing environment variables
 import 'dotenv/config';
 
-// Importing the function to buy tokens from a swapper module
 import { buyToken } from "../swapper/buyToken";
 
-// Importing Keypair class for Solana wallet management
 import { Keypair } from "@solana/web3.js";
 
-// Importing bs58 for decoding Base58 encoded keys
+
 import bs58 from "bs58";
 
-// Importing types for exclusive holder details and Solana balance
 import { ExclusiveHolderDetails, SolBalanceObject } from "../types/types";
 
-// Importing the OpenTrades model for MongoDB interaction
+
 import OpenTrades from "../models/opentrades";
 
-// Importing logger utility for logging
+
 import { logger } from "../utils/logger";
 
-// Importing mongoose for MongoDB connection
 import mongoose from "mongoose";
 
-// Importing the ExclusiveHolders model for MongoDB interaction
 import ExclusiveHolders from "../models/exclusiveholders";
 
-// Importing SolanaBalanceListener class for monitoring Solana balance changes
+
 import { SolanaBalanceListener } from "../utils/SolanaBalanceListener";
 
-// Importing minimum SOL difference threshold for updates
+
 import { MIN_SOL_DIFFERENCE_TO_UPDATE } from "../config/profitConfig";
 
 // Define constants
-const userWalletPublicKey = process.env.WALLET_PUBLIC_KEY || 'YOUR_PUBLIC_KEY'; // Public key of the user's wallet from environment variable
-const primaryWallet = Keypair.fromSecretKey(bs58.decode(process.env.WALLET_PRIVATE_KEY || '')); // Create a Keypair instance from the private key
+const userWalletPublicKey = process.env.WALLET_PUBLIC_KEY || 'YOUR_PUBLIC_KEY'; 
+const primaryWallet = Keypair.fromSecretKey(bs58.decode(process.env.WALLET_PRIVATE_KEY || '')); 
 
 // Connect to MongoDB
 mongoose
@@ -63,16 +58,15 @@ async function fetchExclusiveHolderDetails(): Promise<ExclusiveHolderDetails> {
         return {};
     }
 
-    // Transform the list into an object mapping wallet addresses to their details
+
     const exclusiveHolderDetails: ExclusiveHolderDetails = exclusiveHolders.reduce((acc, holder) => {
         acc[holder.walletAddress] = {
-            sol: holder.solBalance,  // Store SOL balance
-            tokenAddress: holder.tokenAddress  // Store token address
+            sol: holder.solBalance,  
+            tokenAddress: holder.tokenAddress 
         };
         return acc;
     }, {} as ExclusiveHolderDetails);
 
-    // Return the details of exclusive holders
     return exclusiveHolderDetails;
 }
 
@@ -92,7 +86,7 @@ async function processWallet(walletAddresses: string[], exclusiveHolderDetails: 
                 { walletAddress: wallet },  // Filter to find the wallet
                 { $set: { solBalance: currentBalance } }  // Update the SOL balance
             );
-            continue;  // Skip to the next wallet
+            continue;
         }
 
         // If balance difference is less than the minimum threshold, log and update the balance
@@ -102,16 +96,16 @@ async function processWallet(walletAddresses: string[], exclusiveHolderDetails: 
                 { walletAddress: wallet },  // Filter to find the wallet
                 { $set: { solBalance: currentBalance } }  // Update the SOL balance
             );
-            continue;  // Skip to the next wallet
+            continue; 
         }
 
         // If SOL was added, log the addition
         logger.info(`SOL added to wallet ${wallet}: ${balanceDifference.toFixed(4)} SOL ✅`);
 
         // Calculate the amount of SOL to buy with a random percentage
-        const randomPercentage = Math.floor(Math.random() * 11) + 50;  // Generate a random percentage between 50 and 60
-        const solanaToBuy = Math.floor((randomPercentage / 100) * currentBalance);  // Calculate amount of SOL to buy
-        const userSolanaBalance = await getSolanaBalance(userWalletPublicKey);  // Get the user's SOL balance
+        const randomPercentage = Math.floor(Math.random() * 11) + 50;  
+        const solanaToBuy = Math.floor((randomPercentage / 100) * currentBalance); 
+        const userSolanaBalance = await getSolanaBalance(userWalletPublicKey);  
 
         // if (userSolanaBalance < solanaToBuy) {
         //     logger.warn(`User doesn't have enough SOL balance. Required: ${solanaToBuy}, Available: ${userSolanaBalance} ❌`);

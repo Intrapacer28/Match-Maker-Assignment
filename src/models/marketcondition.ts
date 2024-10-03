@@ -4,9 +4,7 @@ interface IMarket extends Document {
     tokenAddress: string;
     marketPrice: number;
     volume24h: number;
-    liquidity: number;
     volatility: number;
-    exclusiveHolder: mongoose.Types.ObjectId; // Reference to ExclusiveHolder
     timestamp: Date;
 }
 
@@ -23,19 +21,12 @@ const marketSchema: Schema<IMarket> = new mongoose.Schema({
         type: Number,
         required: true
     },
-    liquidity: {
-        type: Number,
-        required: true
-    },
+ 
     volatility: {
         type: Number,
         required: true
     },
-    exclusiveHolder: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'exclusiveholders', // Reference to ExclusiveHolder schema
-        required: true
-    },
+   
     timestamp: {
         type: Date,
         default: Date.now

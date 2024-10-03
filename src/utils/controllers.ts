@@ -23,68 +23,88 @@ export const convertTimestampToReadableFormat = (timestamp) => {
 };
 
 // Function to parse transaction using Shyft API
+
+//Added response status check and specific error messages for better handling.
+//Used error.message || error for logging.
 export const parseTransactionShyft = async (txSig) => {
   const url = `https://api.shyft.to/sol/v1/transaction/parsed?network=mainnet-beta&txn_signature=${txSig}`;
   const myHeaders = new Headers();
   myHeaders.append("x-api-key", process.env.SHYFT_API_KEY);
 
-  var requestOptions = {
+  const requestOptions = {
     method: 'GET',
     headers: myHeaders,
-    redirect: 'follow'
+    redirect: 'follow',
   };
 
   try {
     const response = await fetch(url, requestOptions as any);
+
+    // Check if the response is not OK (status code other than 200)
+    if (!response.ok) {
+      throw new Error(`Failed to fetch transaction data. Status: ${response.status}`);
+    }
+
     const result = await response.json();
     return result;
   } catch (error) {
-    logger.error('Error Parsing transaction Shyft :- ', error);
+    logger.error('Error parsing transaction from Shyft: ', error.message || error);
+    throw new Error('Error parsing transaction.');
   }
-}
+};
+
 
 // Function to parse shyft transaction result
+//Reduced code duplication by simplifying the buyOrSell condition.
+//Early returns prevent unnecessary checks and improve readability.
+//Added type checks for safer access to properties
 export const parseTransactionResult = (transaction) => {
+  // Early return if transaction type doesn't include 'SWAP' or missing data
+  if (!transaction?.type?.includes('SWAP') || !transaction?.actions?.[0]) {
+    return null;
+  }
 
-  if (transaction?.type?.includes('SWAP')) {
-    const action = transaction?.actions[0] || [];
-    let signature = transaction?.signatures[0]
-    let buyOrSell: string;
-    let tokenValue: number;
-    let symbol: string;
-    let feePayer: string = transaction?.fee_payer
+  const action = transaction.actions[0];
+  const signature = transaction.signatures?.[0];
+  const feePayer = transaction?.fee_payer;
+  const allTokenAddresses = Object.values(TOKEN_DETAILS);
 
-    const allTokenAddresses = Object.values(TOKEN_DETAILS)
-    let tokenAddress : string ;
+  let buyOrSell = '';
+  let tokenValue = 0;
+  let symbol = '';
+  let tokenAddress = '';
 
-    if(allTokenAddresses.includes(action?.info?.tokens_swapped?.in?.token_address) && !allTokenAddresses.includes(action?.info?.tokens_swapped?.out?.token_address)){
-      tokenAddress = action?.info?.tokens_swapped?.in?.token_address
-    }else if(!allTokenAddresses.includes(action?.info?.tokens_swapped?.in?.token_address) && allTokenAddresses.includes(action?.info?.tokens_swapped?.out?.token_address)){
-      tokenAddress = action?.info?.tokens_swapped?.out?.token_address
-    }else{
-      return null
-    }
+  // Early return if tokens_swapped info is missing
+  if (!action?.info?.tokens_swapped?.in || !action?.info?.tokens_swapped?.out) {
+    return null;
+  }
 
-    if (action?.info?.tokens_swapped?.in?.token_address == tokenAddress) {
-      buyOrSell = 'SELL',
-      symbol = (action?.info?.tokens_swapped?.in?.symbol)
-      tokenValue = (action?.info?.tokens_swapped?.in?.amount);
-    }
+  const inToken = action.info.tokens_swapped.in;
+  const outToken = action.info.tokens_swapped.out;
 
-    if (action?.info?.tokens_swapped?.out?.token_address == tokenAddress) {
-      buyOrSell = 'BUY',
-      symbol = (action?.info?.tokens_swapped?.out?.symbol)
-      tokenValue = (action?.info?.tokens_swapped?.out?.amount);
-    }
+  // Determine the token address and buy/sell condition in a simplified way
+  if (allTokenAddresses.includes(inToken.token_address) && !allTokenAddresses.includes(outToken.token_address)) {
+    buyOrSell = 'SELL';
+    tokenAddress = inToken.token_address;
+    tokenValue = inToken.amount;
+    symbol = inToken.symbol;
+  } else if (!allTokenAddresses.includes(inToken.token_address) && allTokenAddresses.includes(outToken.token_address)) {
+    buyOrSell = 'BUY';
+    tokenAddress = outToken.token_address;
+    tokenValue = outToken.amount;
+    symbol = outToken.symbol;
+  } else {
+    return null; // Token address mismatch
+  }
 
-    if (buyOrSell == 'SELL' || buyOrSell == 'BUY') {
-      return { buyOrSell, tokenValue, signature, symbol, feePayer , tokenAddress}
-    }
+  // Return the parsed transaction details if buyOrSell is determined
+  if (buyOrSell) {
+    return { buyOrSell, tokenValue, signature, symbol, feePayer, tokenAddress };
+  }
 
-  } 
+  return null;
+};
 
-  return null
-}
 
 // Function to parse helius swap transaction
 export async function parseTransactionHeliusSwap(transaction) {
@@ -149,9 +169,9 @@ export async function parseTransactionHeliusTransfer(transaction) {
   const parts = description.split(' ');
   if(parts){
     const fromAccount = parts[0];
-    const tokenTransferred = parseFloat(parts[1]);
+    const tokenTransferred = parseFloat(parts[2]);
     const tokenSymbol = parts[3];
-    let toAccount = parts[4];
+    let toAccount = parts[5];
   
     toAccount = toAccount.endsWith('.') ? toAccount.slice(0, -1) : toAccount;
   

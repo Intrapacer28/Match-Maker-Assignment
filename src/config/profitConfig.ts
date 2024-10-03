@@ -1,4 +1,4 @@
-export const MIN_TOKEN_AMOUNT = 1000 // write in USDC 
+export const MIN_TOKEN_AMOUNT = 1 // write in USDC 
 export const MIN_SOL_BALANCE = 10 // write in sol
 export const MIN_SOL_BALANCE_EXCLUSIVE = 5 //minimum sol balance for exclusive holder
 export const MIN_TOKEN_AMOUNT_EXCLUSIVE = 500 //minimum sol balance for exclusive holder //in USDC
@@ -10,6 +10,9 @@ export const AUTO_SELL_LOSS_PERCENTAGE = 20;    // set auto_sell loss limit
 export const PRICE_CHECK_INTERVAL = 5000; // interval to check price for auto_sell feature
 export const OPEN_TRADE_EXPIRATION_TIME = 3600000 // 60 minutes in ms 
 export const LAMPORTS_PER_SOL =100000;
+export const BASE_AMOUNT_FOR_WHALES = 5;
+export const PERCENT_THRESHOLD_FOR_WHALE_WALLET_QUALIFICATION = 0.05;
+export const ARBITRAGE_THRESHOLD = 0.03;
 
 
 export const MIN_SOL_DIFFERENCE_TO_UPDATE = 5; // in SOL 
@@ -24,6 +27,7 @@ export const MIN_TOKEN_DIFFERENCE_TO_SELL_USDC = 100; // in USDC how much he hav
 
 // write symbol & token address in same a object
 export const TOKEN_DETAILS = {
+    'wsb': "7HEVaZMbunuFapQSgJKy18aA8sXd9HWoa1PjuNYVwXbH",
     'r/snoofi' : "7M9KJcPNC65ShLDmJmTNhVFcuY95Y1VMeYngKgt67D1t" ,
     'vibes' :    "Ed1yisBEAo8UXToSswvVFgzyJKpF48HEdq5kvz2zpump" ,
     'SOLEX' :    "3ceMC8r66WzTFGunkUckoKAbYMXWfzXsgWwmXSYY4x6L"

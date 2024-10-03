@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.TOKEN_DETAILS = exports.MIN_TOKEN_DIFFERENCE_TO_SELL_USDC = exports.MIN_SOL_DIFFERENCE_TO_SELL = exports.MIN_SOL_DIFFERENCE_TO_UPDATE = exports.LAMPORTS_PER_SOL = exports.OPEN_TRADE_EXPIRATION_TIME = exports.PRICE_CHECK_INTERVAL = exports.AUTO_SELL_LOSS_PERCENTAGE = exports.AUTO_SELL_PROFIT_PERCENTAGE = exports.ENABLE_AUTO_SELL_LOSS = exports.ENABLE_AUTO_SELL_PROFIT = exports.AUTO_SELL = exports.MIN_TOKEN_AMOUNT_EXCLUSIVE = exports.MIN_SOL_BALANCE_EXCLUSIVE = exports.MIN_SOL_BALANCE = exports.MIN_TOKEN_AMOUNT = void 0;
-exports.MIN_TOKEN_AMOUNT = 1000; // write in USDC 
+exports.MIN_TOKEN_AMOUNT = 1; // write in USDC 
 exports.MIN_SOL_BALANCE = 10; // write in sol
 exports.MIN_SOL_BALANCE_EXCLUSIVE = 5; //minimum sol balance for exclusive holder
 exports.MIN_TOKEN_AMOUNT_EXCLUSIVE = 500; //minimum sol balance for exclusive holder //in USDC
@@ -20,6 +20,7 @@ exports.MIN_SOL_DIFFERENCE_TO_SELL = 1; // in SOL
 exports.MIN_TOKEN_DIFFERENCE_TO_SELL_USDC = 100; // in USDC how much he have bought so then we sell
 // write symbol & token address in same a object
 exports.TOKEN_DETAILS = {
+    'wsb': "7HEVaZMbunuFapQSgJKy18aA8sXd9HWoa1PjuNYVwXbH",
     'r/snoofi': "7M9KJcPNC65ShLDmJmTNhVFcuY95Y1VMeYngKgt67D1t",
     'vibes': "Ed1yisBEAo8UXToSswvVFgzyJKpF48HEdq5kvz2zpump",
     'SOLEX': "3ceMC8r66WzTFGunkUckoKAbYMXWfzXsgWwmXSYY4x6L"

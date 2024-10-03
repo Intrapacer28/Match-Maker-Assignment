@@ -10,6 +10,7 @@ import OpenTrades from "../models/opentrades";
 import { logger } from "./logger";
 import NotExclusiveHolders from "../models/notexclusiveholders";
 import { MIN_SOL_BALANCE_EXCLUSIVE, MIN_TOKEN_AMOUNT_EXCLUSIVE  } from "../config/profitConfig";
+import { TOKEN_MINT } from "../config/strategicSellingConfig";
 
 // Initialize Helius API key
 const apiKey = process.env.HELIUS_API_KEY;
@@ -409,8 +410,8 @@ export async function getParsedProgramAccounts(
     },
     {
       memcmp: {
-        offset: 32, // location of our query in the account (bytes)
-        bytes: wallet, // our search criteria, a base58 encoded string
+        offset: 32, 
+        bytes: wallet, 
       },
     },
   ];
@@ -526,3 +527,91 @@ export async function getTokenPrice(tokenAddress: string): Promise<number> {
   const data = await response.json();
   return data?.data[tokenAddress]?.price || 0;
 }
+
+/**
+ * Function to get the token balance for a specific wallet and token mint address
+ * @param {string} walletAddress - The public address of the wallet
+ * @param {string} tokenMintAddress - The mint address of the token
+ * @returns {Promise<number>} - The balance of the specified token in the wallet
+ */
+export const getParsedTokenAccountsByOwner = async (
+  walletAddress: string,
+  tokenMintAddress: string
+): Promise<number> => {
+  const url = `https://mainnet.helius-rpc.com/?api-key=${apiKey}`;
+  
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        jsonrpc: "2.0",
+        id: 1,
+        method: "getTokenAccountsByOwner",
+        params: [
+          walletAddress,
+          {
+            programId: SOLANA_TOKENPROGRAM_ID,
+          },
+          {
+            encoding: "jsonParsed",
+          },
+        ],
+      }),
+    });
+
+    const data = await response.json();
+
+    if (data.result && data.result.value) {
+      const tokenAccounts = data.result.value;
+      const tokenAccount = tokenAccounts.find((account: any) => 
+        account.account.data.parsed.info.mint.toLowerCase() === tokenMintAddress.toLowerCase()
+      );
+
+      if (tokenAccount) {
+        return tokenAccount.account.data.parsed.info.tokenAmount.uiAmount || 0;
+      }
+    }
+    
+    return 0; // Return 0 if no accounts found or if balance is not available
+  } catch (error) {
+    console.error("Error fetching token accounts:", error);
+    return 0; // Return 0 on error
+  }
+};
+
+import axios from 'axios';
+
+/**
+ * Fetch prices of a specific token from multiple DEXs.
+ * @param {string} tokenAddress - The address of the token to get prices for.
+ * @returns {Promise<Array<number|null>>} - An array containing prices from different DEXs.
+ */
+export async function getPricesFromDEXs(tokenAddress) {
+    const dexApis = {
+        uniswap: `https://api.uniswap.org/v1/prices/${tokenAddress}`,
+        sushiSwap: `https://api.sushi.com/v1/prices/${tokenAddress}`,
+        quickSwap: `https://api.quickswap.com/v1/prices/${tokenAddress}`,
+        balancer: `https://api.balancer.finance/v1/prices/${tokenAddress}`,
+        // Add more DEX API URLs as needed
+    };
+
+    const pricePromises = Object.entries(dexApis).map(async ([dexName, url]) => {
+        try {
+            const response = await axios.get(url);
+            // Assuming the API response contains price data in response.data.price
+            return response.data.price; // Return only the price
+        } catch (error) {
+            console.error(`Error fetching price from ${dexName}:`, error.message);
+            return null; // Return null for errors
+        }
+    });
+
+    const prices = await Promise.all(pricePromises);
+    return prices; // Return the array of prices directly
+}
+
+module.exports = { getPricesFromDEXs };
+

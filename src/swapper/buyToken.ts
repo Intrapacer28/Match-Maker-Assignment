@@ -50,13 +50,13 @@ export const buyToken = async (
     // Define slippage percentage (in basis points, 100 bps = 1%)
     const slippage = 100; // slippage is 1%
 
-    // Convert the amount of token to be bought from floating-point to integer based on decimal places
+  
     const convertedAmountOfTokenOut = convertToInteger(
       amountOfTokenOut,
       decimals
     );
 
-    // Get a quote for the swap transaction using the converted amount and slippage
+   
     const quoteResponse = await getQuote(
       SOLANA_ADDRESS, // Address of SOL (the token being used to buy)
       addressOfTokenIn, // Address of the token to be bought
@@ -115,3 +115,4 @@ export const buyToken = async (
     throw new Error(error.message);
   }
 };
+

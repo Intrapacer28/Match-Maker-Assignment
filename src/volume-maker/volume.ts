@@ -16,43 +16,9 @@ import {
   TOKEN_MINT,
   TOTAL_TRANSACTION,
 } from "../config/volumeConfig";
-import fs from 'fs';
 
 // Initialize connection
 const connection = new Connection(clusterApiUrl("mainnet-beta")); 
-
-const CHILD_WALLETS_FILE = "./childWallets.json"; // File to store the child wallets
-
-// Function to store child wallets
-const storeChildWallets = (wallets: Keypair[]) => {
-  const walletData = wallets.map(wallet => ({
-    publicKey: wallet.publicKey.toBase58(),
-    secretKey: base58.encode(wallet.secretKey),
-  }));
-
-  fs.writeFileSync(CHILD_WALLETS_FILE, JSON.stringify(walletData, null, 2));
-  console.log(`Child wallets stored in ${CHILD_WALLETS_FILE}`);
-};
-
-// Function to load child wallets (if needed)
-const loadChildWallets = (): Keypair[] => {
-  if (!fs.existsSync(CHILD_WALLETS_FILE)) {
-    throw new Error("Child wallets file does not exist. Run the script to create them first.");
-  }
-
-  const walletData = JSON.parse(fs.readFileSync(CHILD_WALLETS_FILE, 'utf-8'));
-  return walletData.map((wallet: any) => Keypair.fromSecretKey(base58.decode(wallet.secretKey)));
-};
-
-// Function to create child wallets regardless of distribution
-const createChildWallets = (numWallets: number): Keypair[] => {
-  const wallets = [];
-  for (let i = 0; i < numWallets; i++) {
-    wallets.push(Keypair.generate());
-  }
-  storeChildWallets(wallets); // Store wallets immediately
-  return wallets;
-};
 
 const main = async () => {
   // Load main wallet's secret key from environment variables
@@ -81,9 +47,6 @@ const main = async () => {
     throw new Error("Total transactions must be even for balanced buy/sell.");
   }
 
-  // Create and store child wallets regardless of distribution
-  const childWallets = createChildWallets(DISTRIBUTION_NUM);
-
   let data: { kp: Keypair; buyAmount: number }[] | null = null;
 
   // Only proceed with SOL distribution if there's enough balance
@@ -91,7 +54,7 @@ const main = async () => {
     console.log("Sufficient balance, distributing SOL...");
     data = (await distributeSol(mainWalletKeypair, DISTRIBUTION_NUM)) as { kp: Keypair; buyAmount: number }[];
   } else {
-    console.log("Sol balance is not enough for distribution. Child wallets created but not funded.");
+    console.log("Sol balance is not enough for distribution.");
     return; // Exit if distribution can't happen
   }
 
@@ -99,9 +62,6 @@ const main = async () => {
     console.log("Distribution failed or no wallets created.");
     return;
   }
-
-  // Save the created child wallets to a file for later use (already done by createChildWallets)
-  storeChildWallets(data.map(d => d.kp));
 
   // Create SPL token accounts for each child wallet
   for (const { kp } of data) {
@@ -273,14 +233,11 @@ const main = async () => {
         buyCount++;
       }
     }
-
-    console.log(`${i + 1} transactions completed. Waiting for next ${BUY_INTERVAL} seconds...`);
+    console.log("Wait for", BUY_INTERVAL, "Seconds for next transaction");
     await delay(BUY_INTERVAL * 1000);
   }
 
-  console.log(`${TOTAL_TRANSACTION} transactions completed.`);
+  console.log("Execution finished");
 };
 
-main().catch(err => {
-  console.error(err);
-});
+main();

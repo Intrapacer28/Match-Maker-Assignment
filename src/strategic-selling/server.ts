@@ -41,14 +41,14 @@ app.post('/webhook', async (req, res) => {
 
     //     result?.buyOrSell == 'BUY' ? (totalBuy += result?.tokenValue) : (totalSell += result?.tokenValue) ;
 
-    //     if(result?.buyOrSell == 'BUY' && result?.tokenValue > BASE_AMOUNT){
+    //     if(result?.buyOrSell == 'BUY' && result?.tokenValue > BASE_AMOUNT){     
     //         //sell 50-70% of BUY AMOUNT
     //         const randomPercentage = getRandomNumberInRange(50,70);
     //         const tokenToSell = (randomPercentage/100)*result.tokenValue ;
     //         // await sellToken(primaryWallet,false,TOKEN_MINT,false,tokenToSell)
     //     }
 
-    //     if( (totalBuy-totalSell) > BASE_AMOUNT ){
+    //     if( (totalBuy-totalSell) > BASE_AMOUNT ){                            
     //         const randomPercentage = getRandomNumberInRange(50,70);
     //         const tokenToSell = (randomPercentage/100)*BASE_AMOUNT ;
     //         // await sellToken(primaryWallet,false,TOKEN_MINT,false,tokenToSell);
@@ -66,5 +66,4 @@ res.sendStatus(200);
 app.listen(port, () => {
     console.log(`Server listening on port ${port}`);
 });
-
 
