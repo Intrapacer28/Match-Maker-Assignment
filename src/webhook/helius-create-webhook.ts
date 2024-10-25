@@ -1,5 +1,9 @@
 import 'dotenv/config';
 import { logger } from '../utils/logger';
+import { TOKEN_DETAILS } from '../config/profitConfig';
+
+
+
 
 // Function to delete existing webhooks
 const deleteExistingWebhooks = async () => {
@@ -10,7 +14,7 @@ const deleteExistingWebhooks = async () => {
                 method: 'GET',
             }
         );
-
+        
         const webhooks = await response.json();
         
         if (webhooks.length > 0) {
@@ -28,15 +32,20 @@ const deleteExistingWebhooks = async () => {
             logger.info('No existing webhooks found to delete.');
         }
     } catch (error) {
-        logger.error('Error deleting existing webhooks:', error.message);
+        
         throw error;
     }
 };
 
-export const createWebhook = async (tokenAddresses) => {
+
+
+export const createWebhook = async (tokenAddresses: any, webhookURL: string) => {
     try {
         // First, delete any existing webhooks
         await deleteExistingWebhooks();
+        const tokenAddresses = Object.values(TOKEN_DETAILS); 
+       const webhookURL = process.env.WEBHOOK_URL;
+    //    console.log(webhookURL);
 
         // Then, create a new webhook
         const response = await fetch(
@@ -47,12 +56,11 @@ export const createWebhook = async (tokenAddresses) => {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    "webhookURL": "https://becc-2401-4900-1b8e-e10b-2c82-989e-f6ca-bc72.ngrok-free.app/webhook/",
+                    "webhookURL": webhookURL,
                     "transactionTypes": ["Any"],
                     "accountAddresses": tokenAddresses,
                     "webhookType": "enhanced", // "rawDevnet"
                     "txnStatus": "success", // success/failed
-                   
                 }),
             }
         );
@@ -72,7 +80,6 @@ export const createWebhook = async (tokenAddresses) => {
             throw new Error('No webhook ID returned');
         }
     } catch (error) {
-        logger.error('Error creating webhook:', error.message);
         throw error;
     }
 };

@@ -1,42 +1,9 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-var __generator = (this && this.__generator) || function (thisArg, body) {
-    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g = Object.create((typeof Iterator === "function" ? Iterator : Object).prototype);
-    return g.next = verb(0), g["throw"] = verb(1), g["return"] = verb(2), typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
-    function verb(n) { return function (v) { return step([n, v]); }; }
-    function step(op) {
-        if (f) throw new TypeError("Generator is already executing.");
-        while (g && (g = 0, op[0] && (_ = 0)), _) try {
-            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
-            if (y = 0, t) op = [op[0] & 2, t.value];
-            switch (op[0]) {
-                case 0: case 1: t = op; break;
-                case 4: _.label++; return { value: op[1], done: false };
-                case 5: _.label++; y = op[1]; op = [0]; continue;
-                case 7: op = _.ops.pop(); _.trys.pop(); continue;
-                default:
-                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
-                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
-                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
-                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
-                    if (t[2]) _.ops.pop();
-                    _.trys.pop(); continue;
-            }
-            op = body.call(thisArg, _);
-        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
-        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
-    }
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getBalanceOfToken = exports.delay = void 0;
+exports.moveWalletToNewSchema = exports.fetchMarketData = exports.getDynamicSellPercentage = exports.fetchHistoricalTransactions = exports.analyzeTransactions = exports.getParsedTokenAccountsByOwner = exports.getBalanceOfToken = exports.delay = void 0;
 exports.getTokenAccounts = getTokenAccounts;
 exports.getExclusiveTokenHolders = getExclusiveTokenHolders;
 exports.checkExclusiveTokenHolders = checkExclusiveTokenHolders;
@@ -49,394 +16,275 @@ exports.getTokenDecimals = getTokenDecimals;
 exports.getParsedProgramAccounts = getParsedProgramAccounts;
 exports.checkExclusiveTokenHolder = checkExclusiveTokenHolder;
 exports.calculateTokenAmountForUSDC = calculateTokenAmountForUSDC;
+exports.calculateSOLAmountForUSDC = calculateSOLAmountForUSDC;
 exports.getTokenPrice = getTokenPrice;
-var fs_1 = require("fs");
-var path_1 = require("path");
+exports.getPricesFromDEXs = getPricesFromDEXs;
+exports.fetchHistoricalPrices = fetchHistoricalPrices;
+exports.storeHistoricalPrices = storeHistoricalPrices;
+exports.getMarketContext = getMarketContext;
+exports.getPricesAndMarketDataFromDEXs = getPricesAndMarketDataFromDEXs;
+exports.fetchTokenData = fetchTokenData;
+exports.recordBuyBehavior = recordBuyBehavior;
+exports.recordSellBehavior = recordSellBehavior;
+exports.calculateMovingAverage = calculateMovingAverage;
+const fs_1 = __importDefault(require("fs"));
+const path_1 = __importDefault(require("path"));
 require("dotenv/config");
-var web3_js_1 = require("@solana/web3.js");
-var consts_1 = require("../config/consts");
-var exclusiveholders_1 = require("../models/exclusiveholders");
-var opentrades_1 = require("../models/opentrades");
-var logger_1 = require("./logger");
-var notexclusiveholders_1 = require("../models/notexclusiveholders");
-var profitConfig_1 = require("../config/profitConfig");
+const web3_js_1 = require("@solana/web3.js");
+const consts_1 = require("../config/consts");
+const exclusiveholders_1 = __importDefault(require("../models/exclusiveholders"));
+const opentrades_1 = __importDefault(require("../models/opentrades"));
+const logger_1 = require("./logger");
+const notexclusiveholders_1 = __importDefault(require("../models/notexclusiveholders"));
+const profitConfig_1 = require("../config/profitConfig");
 // Initialize Helius API key
-var apiKey = process.env.HELIUS_API_KEY;
+const apiKey = process.env.HELIUS_API_KEY;
 // Function to get token accounts
-function getTokenAccounts(tokenMintAddress) {
-    return __awaiter(this, void 0, void 0, function () {
-        var allOwners, cursor, url, params, response, data;
-        return __generator(this, function (_a) {
-            switch (_a.label) {
-                case 0:
-                    allOwners = new Set();
-                    url = "https://mainnet.helius-rpc.com/?api-key=".concat(apiKey);
-                    _a.label = 1;
-                case 1:
-                    if (!true) return [3 /*break*/, 4];
-                    params = {
-                        limit: 1000,
-                        mint: tokenMintAddress,
-                    };
-                    if (cursor != undefined) {
-                        params.cursor = cursor;
-                    }
-                    return [4 /*yield*/, fetch(url, {
-                            method: "POST",
-                            headers: {
-                                "Content-Type": "application/json",
-                            },
-                            body: JSON.stringify({
-                                jsonrpc: "2.0",
-                                id: 1,
-                                method: "getTokenAccounts",
-                                params: params,
-                            }),
-                        })];
-                case 2:
-                    response = _a.sent();
-                    return [4 /*yield*/, response.json()];
-                case 3:
-                    data = (_a.sent());
-                    if (!data.result || data.result.token_accounts.length === 0) {
-                        return [3 /*break*/, 4];
-                    }
-                    data.result.token_accounts.forEach(function (account) {
-                        allOwners.add(account.owner);
-                    });
-                    cursor = data.result.cursor;
-                    return [3 /*break*/, 1];
-                case 4:
-                    fs_1.default.writeFileSync("./files/tokenHolders.json", JSON.stringify(Array.from(allOwners), null, 2));
-                    return [2 /*return*/];
-            }
+async function getTokenAccounts(tokenMintAddress) {
+    let allOwners = new Set();
+    let cursor;
+    const url = `https://mainnet.helius-rpc.com/?api-key=${apiKey}`;
+    while (true) {
+        let params = {
+            limit: 1000,
+            mint: tokenMintAddress,
+        };
+        if (cursor != undefined) {
+            params.cursor = cursor;
+        }
+        const response = await (0, node_fetch_1.default)(url, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                jsonrpc: "2.0",
+                id: 1,
+                method: "getTokenAccounts",
+                params: params,
+            }),
         });
-    });
+        const data = (await response.json());
+        if (!data.result || data.result.token_accounts.length === 0) {
+            break;
+        }
+        data.result.token_accounts.forEach((account) => {
+            allOwners.add(account.owner);
+        });
+        cursor = data.result.cursor;
+    }
+    fs_1.default.writeFileSync("./files/tokenHolders.json", JSON.stringify(Array.from(allOwners), null, 2));
 }
 // Function to get exclusive token holders
-function getExclusiveTokenHolders(tokenMintAddress) {
-    return __awaiter(this, void 0, void 0, function () {
-        var url, allOwnersData, exclusiveHolders_1, now, i, batchSize, slicedAllOwnersData, error_1;
-        var _this = this;
-        return __generator(this, function (_a) {
-            switch (_a.label) {
-                case 0:
-                    url = "https://mainnet.helius-rpc.com/?api-key=".concat(apiKey);
-                    return [4 /*yield*/, getTokenAccounts(tokenMintAddress)];
-                case 1:
-                    _a.sent();
-                    _a.label = 2;
-                case 2:
-                    _a.trys.push([2, 7, , 8]);
-                    allOwnersData = JSON.parse(fs_1.default.readFileSync("./files/tokenHolders.json", "utf8"));
-                    exclusiveHolders_1 = [];
-                    now = new Date().getTime();
-                    i = 0;
-                    batchSize = 50;
-                    console.log("allOwnersData.length", allOwnersData.length);
-                    _a.label = 3;
-                case 3:
-                    console.log("i", i);
-                    slicedAllOwnersData = allOwnersData.slice(i, Math.min(allOwnersData.length, i + batchSize));
-                    return [4 /*yield*/, Promise.all(slicedAllOwnersData.map(function (holder) { return __awaiter(_this, void 0, void 0, function () {
-                            var ownerResponse, ownerData, ownerTokenAccounts;
-                            return __generator(this, function (_a) {
-                                switch (_a.label) {
-                                    case 0: return [4 /*yield*/, fetch(url, {
-                                            method: "POST",
-                                            headers: { "Content-Type": "application/json" },
-                                            body: JSON.stringify({
-                                                jsonrpc: "2.0",
-                                                method: "getTokenAccountsByOwner",
-                                                id: 1,
-                                                params: [
-                                                    holder,
-                                                    {
-                                                        programId: "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
-                                                    },
-                                                    {
-                                                        encoding: "jsonParsed",
-                                                    },
-                                                ],
-                                            }),
-                                        })];
-                                    case 1:
-                                        ownerResponse = _a.sent();
-                                        return [4 /*yield*/, ownerResponse.json()];
-                                    case 2:
-                                        ownerData = (_a.sent());
-                                        if (ownerData.result) {
-                                            ownerTokenAccounts = ownerData.result.value;
-                                            if (ownerTokenAccounts.length === 1 &&
-                                                ownerTokenAccounts[0].account.data.parsed.info.mint.toLowerCase() ===
-                                                    tokenMintAddress.toLowerCase()) {
-                                                exclusiveHolders_1.push(holder);
-                                            }
-                                        }
-                                        return [2 /*return*/];
-                                }
-                            });
-                        }); }))];
-                case 4:
-                    _a.sent();
-                    i += batchSize;
-                    _a.label = 5;
-                case 5:
-                    if (i < allOwnersData.length) return [3 /*break*/, 3];
-                    _a.label = 6;
-                case 6:
-                    fs_1.default.writeFileSync("./files/exclusiveHolders.json", JSON.stringify(exclusiveHolders_1, null, 2));
-                    console.log("Exclusive token holders saved to file.");
-                    return [3 /*break*/, 8];
-                case 7:
-                    error_1 = _a.sent();
-                    console.error("Error reading owner data from file:", error_1);
-                    return [3 /*break*/, 8];
-                case 8: return [2 /*return*/];
-            }
-        });
-    });
+async function getExclusiveTokenHolders(tokenMintAddress) {
+    const url = `https://mainnet.helius-rpc.com/?api-key=${apiKey}`;
+    await getTokenAccounts(tokenMintAddress);
+    try {
+        const allOwnersData = JSON.parse(fs_1.default.readFileSync("./files/tokenHolders.json", "utf8"));
+        const exclusiveHolders = [];
+        const now = new Date().getTime();
+        let i = 0;
+        const batchSize = 50;
+        console.log("allOwnersData.length", allOwnersData.length);
+        do {
+            console.log("i", i);
+            const slicedAllOwnersData = allOwnersData.slice(i, Math.min(allOwnersData.length, i + batchSize));
+            await Promise.all(slicedAllOwnersData.map(async (holder) => {
+                const ownerResponse = await (0, node_fetch_1.default)(url, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        jsonrpc: "2.0",
+                        method: "getTokenAccountsByOwner",
+                        id: 1,
+                        params: [
+                            holder,
+                            {
+                                programId: "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+                            },
+                            {
+                                encoding: "jsonParsed",
+                            },
+                        ],
+                    }),
+                });
+                const ownerData = (await ownerResponse.json());
+                if (ownerData.result) {
+                    const ownerTokenAccounts = ownerData.result.value;
+                    if (ownerTokenAccounts.length === 1 &&
+                        ownerTokenAccounts[0].account.data.parsed.info.mint.toLowerCase() ===
+                            tokenMintAddress.toLowerCase()) {
+                        exclusiveHolders.push(holder);
+                    }
+                }
+            }));
+            i += batchSize;
+        } while (i < allOwnersData.length);
+        fs_1.default.writeFileSync("./files/exclusiveHolders.json", JSON.stringify(exclusiveHolders, null, 2));
+        console.log("Exclusive token holders saved to file.");
+    }
+    catch (error) {
+        console.error("Error reading owner data from file:", error);
+    }
 }
 // Function to check exclusive token holders
-function checkExclusiveTokenHolders(tokenMintAddress, tokenAddresses) {
-    return __awaiter(this, void 0, void 0, function () {
-        var url, newExclusiveHolders_1, i, batchSize, slicedAllOwnersData, pathFile, data, jsonData_1, updatedData, exclusiveHolderData, error_2;
-        var _this = this;
-        return __generator(this, function (_a) {
-            switch (_a.label) {
-                case 0:
-                    url = "https://mainnet.helius-rpc.com/?api-key=".concat(apiKey);
-                    _a.label = 1;
-                case 1:
-                    _a.trys.push([1, 6, , 7]);
-                    newExclusiveHolders_1 = [];
-                    i = 0;
-                    batchSize = 50;
-                    _a.label = 2;
-                case 2:
-                    slicedAllOwnersData = tokenAddresses.slice(i, Math.min(tokenAddresses.length, i + batchSize));
-                    return [4 /*yield*/, Promise.all(slicedAllOwnersData.map(function (holder) { return __awaiter(_this, void 0, void 0, function () {
-                            var ownerResponse, ownerData, ownerTokenAccounts;
-                            return __generator(this, function (_a) {
-                                switch (_a.label) {
-                                    case 0: return [4 /*yield*/, fetch(url, {
-                                            method: "POST",
-                                            headers: { "Content-Type": "application/json" },
-                                            body: JSON.stringify({
-                                                jsonrpc: "2.0",
-                                                method: "getTokenAccountsByOwner",
-                                                id: 1,
-                                                params: [
-                                                    holder,
-                                                    {
-                                                        programId: "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
-                                                    },
-                                                    {
-                                                        encoding: "jsonParsed",
-                                                    },
-                                                ],
-                                            }),
-                                        })];
-                                    case 1:
-                                        ownerResponse = _a.sent();
-                                        return [4 /*yield*/, ownerResponse.json()];
-                                    case 2:
-                                        ownerData = (_a.sent());
-                                        if (ownerData.result) {
-                                            ownerTokenAccounts = ownerData.result.value;
-                                            if (ownerTokenAccounts.length === 1 &&
-                                                ownerTokenAccounts[0].account.data.parsed.info.mint.toLowerCase() ===
-                                                    tokenMintAddress.toLowerCase()) {
-                                                newExclusiveHolders_1.push(holder);
-                                            }
-                                        }
-                                        return [2 /*return*/];
-                                }
-                            });
-                        }); }))];
-                case 3:
-                    _a.sent();
-                    i += batchSize;
-                    _a.label = 4;
-                case 4:
-                    if (i < tokenAddresses.length) return [3 /*break*/, 2];
-                    _a.label = 5;
-                case 5:
-                    pathFile = path_1.default.join(__dirname, "..", "./files/exclusiveHolders.json");
-                    if (fs_1.default.existsSync(pathFile)) {
-                        try {
-                            data = fs_1.default.readFileSync(pathFile, 'utf8');
-                            if (data.trim() === '') {
-                                jsonData_1 = [];
-                            }
-                            else {
-                                jsonData_1 = JSON.parse(data);
-                            }
-                            newExclusiveHolders_1.forEach(function (holder) {
-                                jsonData_1.push(holder);
-                            });
-                            updatedData = JSON.stringify(jsonData_1, null, 2);
-                            fs_1.default.writeFileSync(pathFile, updatedData, 'utf8');
-                            console.log('Exclusive Token Holder file has been updated');
-                        }
-                        catch (err) {
-                            console.error('Error reading or writing the Exclusive Token Holder File:', err);
-                        }
+async function checkExclusiveTokenHolders(tokenMintAddress, tokenAddresses) {
+    const url = `https://mainnet.helius-rpc.com/?api-key=${apiKey}`;
+    try {
+        const newExclusiveHolders = [];
+        let i = 0;
+        const batchSize = 50;
+        do {
+            const slicedAllOwnersData = tokenAddresses.slice(i, Math.min(tokenAddresses.length, i + batchSize));
+            await Promise.all(slicedAllOwnersData.map(async (holder) => {
+                const ownerResponse = await (0, node_fetch_1.default)(url, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        jsonrpc: "2.0",
+                        method: "getTokenAccountsByOwner",
+                        id: 1,
+                        params: [
+                            holder,
+                            {
+                                programId: "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+                            },
+                            {
+                                encoding: "jsonParsed",
+                            },
+                        ],
+                    }),
+                });
+                const ownerData = (await ownerResponse.json());
+                if (ownerData.result) {
+                    const ownerTokenAccounts = ownerData.result.value;
+                    if (ownerTokenAccounts.length === 1 &&
+                        ownerTokenAccounts[0].account.data.parsed.info.mint.toLowerCase() ===
+                            tokenMintAddress.toLowerCase()) {
+                        newExclusiveHolders.push(holder);
                     }
-                    else {
-                        try {
-                            exclusiveHolderData = JSON.stringify(newExclusiveHolders_1, null, 2);
-                            fs_1.default.writeFileSync(pathFile, exclusiveHolderData, 'utf8');
-                            console.log('Exclusive Token Holder file has been updated');
-                        }
-                        catch (err) {
-                            console.error('Error writing the Exclusive Token Holder File:', err);
-                        }
-                    }
-                    return [3 /*break*/, 7];
-                case 6:
-                    error_2 = _a.sent();
-                    console.error("Error updating Exclusive Token Holder File:", error_2);
-                    return [3 /*break*/, 7];
-                case 7: return [2 /*return*/];
+                }
+            }));
+            i += batchSize;
+        } while (i < tokenAddresses.length);
+        const pathFile = path_1.default.join(__dirname, "..", "./files/exclusiveHolders.json");
+        if (fs_1.default.existsSync(pathFile)) {
+            try {
+                const data = fs_1.default.readFileSync(pathFile, 'utf8');
+                let jsonData;
+                if (data.trim() === '') {
+                    jsonData = [];
+                }
+                else {
+                    jsonData = JSON.parse(data);
+                }
+                newExclusiveHolders.forEach(holder => {
+                    jsonData.push(holder);
+                });
+                const updatedData = JSON.stringify(jsonData, null, 2);
+                fs_1.default.writeFileSync(pathFile, updatedData, 'utf8');
+                console.log('Exclusive Token Holder file has been updated');
             }
-        });
-    });
+            catch (err) {
+                console.error('Error reading or writing the Exclusive Token Holder File:', err);
+            }
+        }
+        else {
+            try {
+                const exclusiveHolderData = JSON.stringify(newExclusiveHolders, null, 2);
+                fs_1.default.writeFileSync(pathFile, exclusiveHolderData, 'utf8');
+                console.log('Exclusive Token Holder file has been updated');
+            }
+            catch (err) {
+                console.error('Error writing the Exclusive Token Holder File:', err);
+            }
+        }
+    }
+    catch (error) {
+        console.error("Error updating Exclusive Token Holder File:", error);
+    }
 }
 // Function to get SOL balance
-function getSolanaBalance(walletAddress) {
-    return __awaiter(this, void 0, void 0, function () {
-        var url, attempts, response, data, error_3;
-        return __generator(this, function (_a) {
-            switch (_a.label) {
-                case 0:
-                    url = "https://mainnet.helius-rpc.com/?api-key=".concat(apiKey);
-                    attempts = 0;
-                    _a.label = 1;
-                case 1:
-                    if (!(attempts < 5)) return [3 /*break*/, 11];
-                    _a.label = 2;
-                case 2:
-                    _a.trys.push([2, 9, , 10]);
-                    return [4 /*yield*/, fetch(url, {
-                            method: "POST",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({
-                                jsonrpc: "2.0",
-                                method: "getBalance",
-                                id: 1,
-                                params: [walletAddress],
-                            }),
-                        })];
-                case 3:
-                    response = _a.sent();
-                    return [4 /*yield*/, response.json()];
-                case 4:
-                    data = (_a.sent());
-                    if (!data.result) return [3 /*break*/, 5];
-                    return [2 /*return*/, (data.result.value / 1e9)];
-                case 5:
-                    if (!(data.error && data.error.code === -32429)) return [3 /*break*/, 7];
-                    console.error("Exceeded limit for RPC, retrying in 1 second...");
-                    return [4 /*yield*/, (0, exports.delay)(1000)];
-                case 6:
-                    _a.sent();
-                    return [3 /*break*/, 8];
-                case 7:
-                    console.error("Error fetching balance:", data.error);
-                    return [3 /*break*/, 11];
-                case 8: return [3 /*break*/, 10];
-                case 9:
-                    error_3 = _a.sent();
-                    console.error("Error fetching balance:", error_3);
-                    return [3 /*break*/, 11];
-                case 10:
-                    attempts++;
-                    return [3 /*break*/, 1];
-                case 11: return [2 /*return*/, 0];
+// Function to get SOL balance
+async function getSolanaBalance(walletAddress) {
+    const url = `https://mainnet.helius-rpc.com/?api-key=${apiKey}`;
+    for (let attempts = 0; attempts < 5; attempts++) {
+        try {
+            const response = await (0, node_fetch_1.default)(url, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    jsonrpc: "2.0",
+                    method: "getBalance",
+                    id: 1,
+                    params: [walletAddress],
+                }),
+            });
+            const data = await response.json();
+            if (data.result) {
+                const balanceInLamports = data.result.value; // This is in lamports
+                const balanceInSOL = balanceInLamports / 1e9; // Convert to SOL
+                return balanceInSOL; // Return balance in SOL
             }
-        });
-    });
+            else if (data.error) {
+                // Log the error code and message
+                console.error("Error fetching balance:", data.error);
+                break;
+            }
+        }
+        catch (error) {
+            console.error("Error fetching balance:", error);
+            break;
+        }
+    }
+    return 0; // Return 0 if the balance couldn't be fetched
 }
 // Function to get multiple SOL balances
-function getMultipleAccountsSolanaBalance(walletAddresses) {
-    return __awaiter(this, void 0, void 0, function () {
-        var url, solBalances, slicedWalletAddress, i, connection, err_1;
-        var _this = this;
-        return __generator(this, function (_a) {
-            switch (_a.label) {
-                case 0:
-                    url = "https://mainnet.helius-rpc.com/?api-key=".concat(apiKey);
-                    solBalances = {};
-                    slicedWalletAddress = [];
-                    for (i = 0; i < walletAddresses.length; i += 100) {
-                        slicedWalletAddress.push(walletAddresses.slice(i, Math.min(walletAddresses.length, i + 100)));
-                    }
-                    connection = new web3_js_1.Connection(url, 'confirmed');
-                    _a.label = 1;
-                case 1:
-                    _a.trys.push([1, 3, , 4]);
-                    return [4 /*yield*/, Promise.all(slicedWalletAddress.map(function (walletAddresses) { return __awaiter(_this, void 0, void 0, function () {
-                            var walletPubkeys, accounts;
-                            return __generator(this, function (_a) {
-                                switch (_a.label) {
-                                    case 0:
-                                        walletPubkeys = walletAddresses.map(function (walletAddress) { return new web3_js_1.PublicKey(walletAddress); });
-                                        return [4 /*yield*/, connection.getMultipleAccountsInfo(walletPubkeys)];
-                                    case 1:
-                                        accounts = _a.sent();
-                                        accounts.forEach(function (account, index) {
-                                            if (account !== null) {
-                                                var lamports = account.lamports;
-                                                var sol = lamports / 1e9;
-                                                solBalances[walletAddresses[index]] = { sol: sol };
-                                            }
-                                            else {
-                                                solBalances[walletAddresses[index]] = { sol: 0 };
-                                            }
-                                        });
-                                        return [2 /*return*/];
-                                }
-                            });
-                        }); }))];
-                case 2:
-                    _a.sent();
-                    (0, exports.delay)(1000);
-                    return [3 /*break*/, 4];
-                case 3:
-                    err_1 = _a.sent();
-                    console.log("ERROR FETHING SOLANA BALANCES", err_1);
-                    return [3 /*break*/, 4];
-                case 4: return [2 /*return*/, solBalances];
-            }
-        });
-    });
+async function getMultipleAccountsSolanaBalance(walletAddresses) {
+    const url = `https://mainnet.helius-rpc.com/?api-key=${apiKey}`;
+    const solBalances = {};
+    const slicedWalletAddress = [];
+    for (let i = 0; i < walletAddresses.length; i += 100) {
+        slicedWalletAddress.push(walletAddresses.slice(i, Math.min(walletAddresses.length, i + 100)));
+    }
+    const connection = new web3_js_1.Connection(url, 'confirmed');
+    try {
+        await Promise.all(slicedWalletAddress.map(async (walletAddresses) => {
+            const walletPubkeys = walletAddresses.map((walletAddress) => new web3_js_1.PublicKey(walletAddress));
+            const accounts = await connection.getMultipleAccountsInfo(walletPubkeys);
+            accounts.forEach((account, index) => {
+                if (account !== null) {
+                    const lamports = account.lamports;
+                    const sol = lamports / 1e9;
+                    solBalances[walletAddresses[index]] = { sol: sol };
+                }
+                else {
+                    solBalances[walletAddresses[index]] = { sol: 0 };
+                }
+            });
+        }));
+        (0, exports.delay)(1000);
+    }
+    catch (err) {
+        console.log("ERROR FETHING SOLANA BALANCES", err);
+    }
+    return solBalances;
 }
 // Function to read exclusive token holders
-function readExclusiveTokenHolders() {
-    return __awaiter(this, void 0, void 0, function () {
-        var walletAddressArray, err_2;
-        return __generator(this, function (_a) {
-            switch (_a.label) {
-                case 0:
-                    _a.trys.push([0, 2, , 3]);
-                    return [4 /*yield*/, exclusiveholders_1.default.find({ openTrade: false }, 'walletAddress solBalance tokenAddress').lean()];
-                case 1:
-                    walletAddressArray = _a.sent();
-                    return [2 /*return*/, walletAddressArray];
-                case 2:
-                    err_2 = _a.sent();
-                    console.error("An error occurred while retrieving wallet addresses:", err_2);
-                    return [2 /*return*/, []];
-                case 3: return [2 /*return*/];
-            }
-        });
-    });
+async function readExclusiveTokenHolders() {
+    try {
+        const walletAddressArray = await exclusiveholders_1.default.find({ openTrade: false }, 'walletAddress solBalance tokenAddress').lean();
+        return walletAddressArray;
+    }
+    catch (err) {
+        console.error("An error occurred while retrieving wallet addresses:", err);
+        return [];
+    }
 }
 function readTokenHolders() {
-    var filePath = path_1.default.join(__dirname, "..", "./files/tokenHolders.json");
+    const filePath = path_1.default.join(__dirname, "..", "./files/tokenHolders.json");
     if (fs_1.default.existsSync(filePath)) {
-        var data = fs_1.default.readFileSync(filePath, "utf8");
+        const data = fs_1.default.readFileSync(filePath, "utf8");
         if (data.trim() === "") {
             return [];
         }
@@ -445,252 +293,671 @@ function readTokenHolders() {
     return [];
 }
 // Function to read open trades
-function readOpenTrades() {
-    return __awaiter(this, void 0, void 0, function () {
-        var openTradesArray, err_3;
-        return __generator(this, function (_a) {
-            switch (_a.label) {
-                case 0:
-                    _a.trys.push([0, 2, , 3]);
-                    return [4 /*yield*/, opentrades_1.default.find({}).lean()];
-                case 1:
-                    openTradesArray = _a.sent();
-                    return [2 /*return*/, openTradesArray];
-                case 2:
-                    err_3 = _a.sent();
-                    console.error("An error occurred while retrieving open trades:", err_3);
-                    return [2 /*return*/, []];
-                case 3: return [2 /*return*/];
-            }
-        });
-    });
+async function readOpenTrades() {
+    try {
+        const openTradesArray = await opentrades_1.default.find({}).lean();
+        return openTradesArray;
+    }
+    catch (err) {
+        console.error("An error occurred while retrieving open trades:", err);
+        return [];
+    }
 }
 // Function to get token decimals
-function getTokenDecimals(tokenAddress) {
-    return __awaiter(this, void 0, void 0, function () {
-        var connection, mint, decimals;
-        return __generator(this, function (_a) {
-            switch (_a.label) {
-                case 0:
-                    connection = new web3_js_1.Connection(process.env.RPC_URL);
-                    return [4 /*yield*/, connection.getParsedAccountInfo(new web3_js_1.PublicKey(tokenAddress))];
-                case 1:
-                    mint = _a.sent();
-                    if (!mint || !mint.value || mint.value.data instanceof Buffer) {
-                        throw new Error("Could not find mint");
-                    }
-                    decimals = mint.value.data.parsed.info.decimals;
-                    return [2 /*return*/, decimals];
-            }
-        });
-    });
+async function getTokenDecimals(tokenAddress) {
+    const connection = new web3_js_1.Connection(process.env.RPC_URL);
+    try {
+        let mint = await connection.getParsedAccountInfo(new web3_js_1.PublicKey(tokenAddress));
+        if (!mint || !mint.value || mint.value.data instanceof Buffer) {
+            throw new Error("Could not find mint");
+        }
+        const decimals = mint.value.data.parsed.info.decimals;
+        return decimals;
+    }
+    catch (error) {
+        // Handle the error gracefully
+        console.error(`Error getting decimals for token ${tokenAddress}:`, error.message);
+        // You can return a default value, throw a custom error, or return null based on your logic
+        return null; // or throw a new custom error if needed
+    }
 }
 // Function to delay
-var delay = function (ms) {
-    return new Promise(function (resolve) { return setTimeout(resolve, ms); });
-};
+const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 exports.delay = delay;
 /**
  * Gets amount of tokens in wallet for given addressToken
  * @param {string} addressOfToken
  * @returns {Promise<number> || Promise<boolean>} amountOfToken
  */
-var getBalanceOfToken = function (publicKeyOfWalletToQuery, addressOfToken) { return __awaiter(void 0, void 0, void 0, function () {
-    var accounts, relevantAccount, tokenBalance, error_4;
-    return __generator(this, function (_a) {
-        switch (_a.label) {
-            case 0:
-                _a.trys.push([0, 2, , 3]);
-                if (!publicKeyOfWalletToQuery) {
-                    throw new Error("No wallet to query");
-                }
-                return [4 /*yield*/, getParsedProgramAccounts(publicKeyOfWalletToQuery)];
-            case 1:
-                accounts = _a.sent();
-                relevantAccount = accounts.find(function (account) {
-                    var parsedAccountInfo = account.account.data;
-                    if (parsedAccountInfo instanceof Buffer) {
-                        console.log("parsedAccountInfo is a buffer");
-                        return false; // Skip this account
-                    }
-                    var mintAddress = parsedAccountInfo["parsed"]["info"]["mint"];
-                    if (mintAddress === addressOfToken) {
-                        return true; // This account is relevant
-                    }
-                    return false; // Skip this account
-                });
-                if (!relevantAccount) {
-                    return [2 /*return*/, 0];
-                }
-                if (relevantAccount.account.data instanceof Buffer) {
-                    throw new Error("relevantAccount is a buffer");
-                }
-                tokenBalance = relevantAccount.account.data["parsed"]["info"]["tokenAmount"]["uiAmount"];
-                return [2 /*return*/, tokenBalance];
-            case 2:
-                error_4 = _a.sent();
-                throw new Error(error_4);
-            case 3: return [2 /*return*/];
+const getBalanceOfToken = async (publicKeyOfWalletToQuery, addressOfToken) => {
+    try {
+        if (!publicKeyOfWalletToQuery) {
+            throw new Error("No wallet to query");
         }
-    });
-}); };
+        const accounts = await getParsedProgramAccounts(publicKeyOfWalletToQuery);
+        const relevantAccount = accounts.find((account) => {
+            const parsedAccountInfo = account.account.data;
+            if (parsedAccountInfo instanceof Buffer) {
+                console.log("parsedAccountInfo is a buffer");
+                return false; // Skip this account
+            }
+            const mintAddress = parsedAccountInfo["parsed"]["info"]["mint"];
+            if (mintAddress === addressOfToken) {
+                return true; // This account is relevant
+            }
+            return false; // Skip this account
+        });
+        if (!relevantAccount) {
+            return 0;
+        }
+        if (relevantAccount.account.data instanceof Buffer) {
+            throw new Error("relevantAccount is a buffer");
+        }
+        const tokenBalance = relevantAccount.account.data["parsed"]["info"]["tokenAmount"]["uiAmount"];
+        return tokenBalance;
+    }
+    catch (error) {
+        throw new Error(error);
+    }
+};
 exports.getBalanceOfToken = getBalanceOfToken;
 // Function to get parsed program accounts
-function getParsedProgramAccounts(wallet) {
-    return __awaiter(this, void 0, void 0, function () {
-        var connection, filters, TOKEN_PROGRAM_ID, accounts;
-        return __generator(this, function (_a) {
-            switch (_a.label) {
-                case 0:
-                    connection = new web3_js_1.Connection(process.env.RPC_URL);
-                    filters = [
-                        {
-                            dataSize: 165, // size of account (bytes)
-                        },
-                        {
-                            memcmp: {
-                                offset: 32, // location of our query in the account (bytes)
-                                bytes: wallet, // our search criteria, a base58 encoded string
-                            },
-                        },
-                    ];
-                    TOKEN_PROGRAM_ID = new web3_js_1.PublicKey(consts_1.SOLANA_TOKENPROGRAM_ID);
-                    return [4 /*yield*/, connection.getParsedProgramAccounts(TOKEN_PROGRAM_ID, { filters: filters })];
-                case 1:
-                    accounts = _a.sent();
-                    return [2 /*return*/, accounts];
-            }
-        });
-    });
+async function getParsedProgramAccounts(wallet) {
+    const connection = new web3_js_1.Connection(process.env.RPC_URL);
+    const filters = [
+        {
+            dataSize: 165, // size of account (bytes)
+        },
+        {
+            memcmp: {
+                offset: 32, // location of our query in the account (bytes)
+                bytes: wallet, // our search criteria, a base58 encoded string
+            },
+        },
+    ];
+    const TOKEN_PROGRAM_ID = new web3_js_1.PublicKey(consts_1.SOLANA_TOKENPROGRAM_ID);
+    const accounts = await connection.getParsedProgramAccounts(TOKEN_PROGRAM_ID, { filters: filters });
+    return accounts;
 }
 // Function to check exclusive token holder
-function checkExclusiveTokenHolder(tokenMintAddress, walletAddress) {
-    return __awaiter(this, void 0, void 0, function () {
-        var existingNotExclusiveHolder, url, ownerResponse, ownerData, ownerTokenAccounts, solBalance, tokenBalance, minTokenBalance, error_5;
-        var _a, _b, _c, _d, _e, _f;
-        return __generator(this, function (_g) {
-            switch (_g.label) {
-                case 0: return [4 /*yield*/, notexclusiveholders_1.default.findOne({ walletAddress: walletAddress })];
-                case 1:
-                    existingNotExclusiveHolder = _g.sent();
-                    if (existingNotExclusiveHolder) {
-                        return [2 /*return*/, null];
+async function checkExclusiveTokenHolder(tokenMintAddress, walletAddress) {
+    // Check if the wallet is already in NotExclusiveHolders
+    const existingNotExclusiveHolder = await notexclusiveholders_1.default.findOne({ walletAddress });
+    if (existingNotExclusiveHolder) {
+        // logger.info('Non-Exclusive holder already exists. Skipping addition.');
+        return null;
+    }
+    const url = `https://mainnet.helius-rpc.com/?api-key=${apiKey}`;
+    try {
+        const ownerResponse = await (0, node_fetch_1.default)(url, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                jsonrpc: "2.0",
+                method: "getTokenAccountsByOwner",
+                id: 1,
+                params: [
+                    walletAddress,
+                    {
+                        programId: "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+                    },
+                    {
+                        encoding: "jsonParsed",
+                    },
+                ],
+            }),
+        });
+        const ownerData = (await ownerResponse.json());
+        if (ownerData.result) {
+            const ownerTokenAccounts = ownerData.result.value;
+            // Check if ownerTokenAccounts is not empty and has the expected structure
+            if (Array.isArray(ownerTokenAccounts) &&
+                ownerTokenAccounts.length === 1 &&
+                ownerTokenAccounts[0]?.account?.data?.parsed?.info?.mint // Safe navigation operator to prevent TypeError
+            ) {
+                // Now we can safely access the mint property
+                if (ownerTokenAccounts[0].account.data.parsed.info.mint.toLowerCase() === tokenMintAddress.toLowerCase()) {
+                    // logger.info("Exclusive Holder Found");
+                    const solBalance = await getSolanaBalance(walletAddress);
+                    console.log(solBalance);
+                    const tokenBalance = ownerTokenAccounts[0].account.data.parsed.info.tokenAmount.uiAmount;
+                    const minTokenBalance = await calculateTokenAmountForUSDC(tokenMintAddress, profitConfig_1.MIN_TOKEN_AMOUNT_EXCLUSIVE);
+                    console.log(minTokenBalance);
+                    // Check if the holder already exists in ExclusiveHolders
+                    const existingExclusiveHolder = await exclusiveholders_1.default.findOne({ walletAddress });
+                    if (!existingExclusiveHolder) {
+                        if (solBalance > profitConfig_1.MIN_SOL_BALANCE_EXCLUSIVE && tokenBalance > minTokenBalance) {
+                            await exclusiveholders_1.default.create({
+                                walletAddress: walletAddress,
+                                tokenAddress: tokenMintAddress,
+                                solBalance: solBalance,
+                                tokenBalance: tokenBalance,
+                                openTrade: false,
+                            }).then(() => {
+                                // logger.info('Exclusive holder added successfully');
+                            }).catch((err) => {
+                                // logger.error('Error adding Exclusive holder:', { message: err.message, stack: err.stack });
+                            });
+                            return {
+                                walletAddress,
+                                tokenMintAddress,
+                                solBalance,
+                                tokenBalance
+                            };
+                        }
                     }
-                    url = "https://mainnet.helius-rpc.com/?api-key=".concat(apiKey);
-                    _g.label = 2;
-                case 2:
-                    _g.trys.push([2, 12, , 13]);
-                    return [4 /*yield*/, fetch(url, {
-                            method: "POST",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({
-                                jsonrpc: "2.0",
-                                method: "getTokenAccountsByOwner",
-                                id: 1,
-                                params: [
-                                    walletAddress,
-                                    {
-                                        programId: "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
-                                    },
-                                    {
-                                        encoding: "jsonParsed",
-                                    },
-                                ],
-                            }),
-                        })];
-                case 3:
-                    ownerResponse = _g.sent();
-                    return [4 /*yield*/, ownerResponse.json()];
-                case 4:
-                    ownerData = (_g.sent());
-                    if (!ownerData.result) return [3 /*break*/, 11];
-                    ownerTokenAccounts = ownerData.result.value;
-                    if (!(ownerTokenAccounts.length === 1 &&
-                        ownerTokenAccounts[0].account.data.parsed.info.mint.toLowerCase() ===
-                            tokenMintAddress.toLowerCase())) return [3 /*break*/, 9];
-                    logger_1.logger.info("Exclusive Holder Found");
-                    return [4 /*yield*/, getSolanaBalance(walletAddress)];
-                case 5:
-                    solBalance = _g.sent();
-                    tokenBalance = (_f = (_e = (_d = (_c = (_b = (_a = ownerTokenAccounts[0]) === null || _a === void 0 ? void 0 : _a.account) === null || _b === void 0 ? void 0 : _b.data) === null || _c === void 0 ? void 0 : _c.parsed) === null || _d === void 0 ? void 0 : _d.info) === null || _e === void 0 ? void 0 : _e.tokenAmount) === null || _f === void 0 ? void 0 : _f.uiAmount;
-                    return [4 /*yield*/, calculateTokenAmountForUSDC(tokenMintAddress, profitConfig_1.MIN_TOKEN_AMOUNT_EXCLUSIVE)];
-                case 6:
-                    minTokenBalance = _g.sent();
-                    if (!(solBalance > profitConfig_1.MIN_SOL_BALANCE_EXCLUSIVE && tokenBalance > minTokenBalance)) return [3 /*break*/, 8];
-                    return [4 /*yield*/, exclusiveholders_1.default.create({
+                    else {
+                        // logger.info('Exclusive holder already exists. Skipping addition.');
+                    }
+                }
+                else {
+                    // Handle the case when the wallet is a NotExclusive holder
+                    const existingNotExclusiveHolder = await notexclusiveholders_1.default.findOne({ walletAddress });
+                    if (!existingNotExclusiveHolder) {
+                        await notexclusiveholders_1.default.create({
                             walletAddress: walletAddress,
                             tokenAddress: tokenMintAddress,
-                            solBalance: solBalance,
-                            tokenBalance: tokenBalance,
-                            openTrade: false,
-                        }).then(function () {
-                            logger_1.logger.info('Exclusive holder added successfully');
-                        }).catch(function (err) {
-                            logger_1.logger.error('Error adding Exclusive holder:', { message: err.message, stack: err.stack });
-                        })];
-                case 7:
-                    _g.sent();
-                    return [2 /*return*/, {
-                            walletAddress: walletAddress,
-                            tokenMintAddress: tokenMintAddress,
-                            solBalance: solBalance,
-                            tokenBalance: tokenBalance
-                        }];
-                case 8: return [3 /*break*/, 11];
-                case 9: return [4 /*yield*/, notexclusiveholders_1.default.create({
-                        walletAddress: walletAddress,
-                        tokenAddress: tokenMintAddress,
-                    }).catch(function (err) {
-                        logger_1.logger.error('Error adding Not Exclusive holder:', { message: err.message, stack: err.stack });
-                    })];
-                case 10:
-                    _g.sent();
-                    _g.label = 11;
-                case 11: return [3 /*break*/, 13];
-                case 12:
-                    error_5 = _g.sent();
-                    logger_1.logger.error("Error checking for exclusive holder = ", { message: error_5, stack: error_5.stack });
-                    return [3 /*break*/, 13];
-                case 13: return [2 /*return*/, null];
+                        }).then(() => {
+                            // logger.info('Non-Exclusive holder added successfully');
+                        }).catch((err) => {
+                            // logger.error('Error adding Not Exclusive holder:', { message: err.message, stack: err.stack });
+                        });
+                    }
+                    else {
+                        // logger.info('Non-Exclusive holder already exists. Skipping addition.');
+                    }
+                }
             }
-        });
-    });
+            else {
+                // logger.warn("No token accounts found or unexpected structure in ownerTokenAccounts");
+            }
+        }
+    }
+    catch (error) {
+        // logger.error("Error checking for exclusive holder = ", { message: error, stack: error.stack });
+    }
+    return null;
 }
 // Function to calculate token amount for USDC
-function calculateTokenAmountForUSDC(tokenAddress, amountInUSDC) {
-    return __awaiter(this, void 0, void 0, function () {
-        var response, data, tokenPrice, tokenAmount;
-        var _a;
-        return __generator(this, function (_b) {
-            switch (_b.label) {
-                case 0: return [4 /*yield*/, fetch("https://price.jup.ag/v6/price?ids=".concat(tokenAddress))];
-                case 1:
-                    response = _b.sent();
-                    return [4 /*yield*/, response.json()];
-                case 2:
-                    data = _b.sent();
-                    tokenPrice = (_a = data === null || data === void 0 ? void 0 : data.data[tokenAddress]) === null || _a === void 0 ? void 0 : _a.price;
-                    tokenAmount = Math.floor((1 / tokenPrice) * amountInUSDC);
-                    return [2 /*return*/, tokenAmount];
-            }
-        });
+async function calculateTokenAmountForUSDC(tokenAddress, amountInUSDC) {
+    const response = await (0, node_fetch_1.default)(`https://price.jup.ag/v6/price?ids=${tokenAddress}`);
+    const data = await response.json();
+    const tokenPrice = data?.data[tokenAddress]?.price;
+    const tokenAmount = Math.floor((1 / tokenPrice) * amountInUSDC);
+    return tokenAmount;
+}
+//Function to convert usdc to sol 
+// Queue to manage requests to calculateSOLAmountForUSDC
+const solRequestQueue = [];
+let isProcessingQueue = false;
+// Function to process the request queue
+async function processQueue() {
+    while (solRequestQueue.length > 0) {
+        const { resolve, reject, amountInUSDC } = solRequestQueue.shift();
+        try {
+            const solAmount = await fetchSOLPrice(amountInUSDC);
+            resolve(solAmount);
+        }
+        catch (error) {
+            reject(error);
+        }
+    }
+    isProcessingQueue = false; // Mark the queue processing as complete
+}
+// Function to fetch SOL price and calculate SOL amount for USDC
+async function fetchSOLPrice(amountInUSDC) {
+    // Use CoinGecko API to get the price of SOL in USDC
+    const response = await (0, node_fetch_1.default)('https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd');
+    console.log(response.status); // Log the status code
+    if (!response.ok) {
+        throw new Error(`Failed to fetch SOL price: ${response.status} ${response.statusText}`);
+    }
+    const data = await response.json();
+    const solPrice = data?.solana?.usd; // Get the price of 1 SOL in USDC
+    if (!solPrice) {
+        throw new Error('SOL price data not available');
+    }
+    const solAmount = amountInUSDC / solPrice; // Convert USDC amount to SOL equivalent
+    return solAmount;
+}
+async function calculateSOLAmountForUSDC(amountInUSDC) {
+    // If there is no ongoing processing, start the queue processing
+    if (!isProcessingQueue) {
+        isProcessingQueue = true;
+        processQueue();
+    }
+    // Return a promise to add this request to the queue
+    return new Promise((resolve, reject) => {
+        solRequestQueue.push({ resolve, reject, amountInUSDC });
     });
 }
 // Function to get token price
-function getTokenPrice(tokenAddress) {
-    return __awaiter(this, void 0, void 0, function () {
-        var response, data;
-        var _a;
-        return __generator(this, function (_b) {
-            switch (_b.label) {
-                case 0: return [4 /*yield*/, fetch("https://price.jup.ag/v6/price?ids=".concat(tokenAddress))];
-                case 1:
-                    response = _b.sent();
-                    return [4 /*yield*/, response.json()];
-                case 2:
-                    data = _b.sent();
-                    return [2 /*return*/, ((_a = data === null || data === void 0 ? void 0 : data.data[tokenAddress]) === null || _a === void 0 ? void 0 : _a.price) || 0];
+async function getTokenPrice(tokenAddress) {
+    const response = await (0, node_fetch_1.default)(`https://price.jup.ag/v6/price?ids=${tokenAddress}`);
+    const data = await response.json();
+    return data?.data[tokenAddress]?.price || 0;
+}
+/**
+ * Function to get the token balance for a specific wallet and token mint address
+ * @param {string} walletAddress - The public address of the wallet
+ * @param {string} tokenMintAddress - The mint address of the token
+ * @returns {Promise<number>} - The balance of the specified token in the wallet
+ */
+const getParsedTokenAccountsByOwner = async (walletAddress, tokenMintAddress) => {
+    const url = `https://mainnet.helius-rpc.com/?api-key=${apiKey}`;
+    try {
+        const response = await (0, node_fetch_1.default)(url, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                jsonrpc: "2.0",
+                id: 1,
+                method: "getTokenAccountsByOwner",
+                params: [
+                    walletAddress,
+                    {
+                        programId: consts_1.SOLANA_TOKENPROGRAM_ID,
+                    },
+                    {
+                        encoding: "jsonParsed",
+                    },
+                ],
+            }),
+        });
+        const data = await response.json();
+        if (data.result && data.result.value) {
+            const tokenAccounts = data.result.value;
+            const tokenAccount = tokenAccounts.find((account) => account.account.data.parsed.info.mint.toLowerCase() === tokenMintAddress.toLowerCase());
+            if (tokenAccount) {
+                return tokenAccount.account.data.parsed.info.tokenAmount.uiAmount || 0;
+            }
+        }
+        return 0; // Return 0 if no accounts found or if balance is not available
+    }
+    catch (error) {
+        console.error("Error fetching token accounts:", error);
+        return 0; // Return 0 on error
+    }
+};
+exports.getParsedTokenAccountsByOwner = getParsedTokenAccountsByOwner;
+//Functions to get prices from various dex's (i havent tested the api list listed in this function yet)
+const axios_1 = __importDefault(require("axios"));
+const transactionhistory_1 = __importDefault(require("../models/transactionhistory"));
+/**
+ * Fetch prices of a specific token from multiple DEXs.
+ * @param {string} tokenAddress - The address of the token to get prices for.
+ * @returns {Promise<Array<number|null>>} - An array containing prices from different DEXs.
+ */
+async function getPricesFromDEXs(tokenAddress) {
+    const dexApis = {
+        uniswap: `https://api.uniswap.org/v1/prices/${tokenAddress}`,
+        sushiSwap: `https://api.sushi.com/v1/prices/${tokenAddress}`,
+        quickSwap: `https://api.quickswap.com/v1/prices/${tokenAddress}`,
+        balancer: `https://api.balancer.finance/v1/prices/${tokenAddress}`,
+        // Add more DEX API URLs as needed
+    };
+    const pricePromises = Object.entries(dexApis).map(async ([dexName, url]) => {
+        try {
+            const response = await axios_1.default.get(url);
+            // Assuming the API response contains price data in response.data.price
+            return response.data.price; // Return only the price
+        }
+        catch (error) {
+            console.error(`Error fetching price from ${dexName}:`, error.message);
+            return null; // Return null for errors
+        }
+    });
+    const prices = await Promise.all(pricePromises);
+    return prices; // Return the array of prices directly
+}
+// Function to analyze transaction history
+const analyzeTransactions = async () => {
+    try {
+        // Fetch historical transactions from the database (MongoDB assumed here)
+        const transactions = await (0, exports.fetchHistoricalTransactions)();
+        // Aggregate data for analysis
+        const analysisData = {
+            totalBuys: 0,
+            totalSells: 0,
+            totalProfit: 0,
+            transactionCount: transactions.length,
+            profitRatios: []
+        };
+        transactions.forEach(transactions => {
+            if (transactions.type === 'BUY') {
+                analysisData.totalBuys += transactions.tokenValue;
+            }
+            else if (transactions.type === 'SELL') {
+                analysisData.totalSells += transactions.tokenValue;
+                const profit = transactions.sellValue - transactions.buyValue;
+                analysisData.totalProfit += profit;
+                // Calculate profit ratio for this transaction
+                const profitRatio = profit / transactions.buyValue;
+                analysisData.profitRatios.push(profitRatio);
             }
         });
+        // Calculate average profit ratio
+        const averageProfitRatio = analysisData.profitRatios.reduce((acc, ratio) => acc + ratio, 0) / analysisData.profitRatios.length || 0;
+        // Log the analysis results
+        console.log("Transaction Analysis:");
+        console.log(`Total Buys: ${analysisData.totalBuys}`);
+        console.log(`Total Sells: ${analysisData.totalSells}`);
+        console.log(`Total Profit: ${analysisData.totalProfit}`);
+        console.log(`Average Profit Ratio: ${(averageProfitRatio * 100).toFixed(2)}%`);
+        console.log(`Total Transactions: ${analysisData.transactionCount}`);
+        // Here you can implement logic to adjust your selling strategy based on the analysis results
+        // For example, if the average profit ratio is high, you may want to be more aggressive with selling...
+    }
+    catch (error) {
+        console.error("Error analyzing transactions:", error);
+    }
+};
+exports.analyzeTransactions = analyzeTransactions;
+// Example function to fetch historical transactions from a MongoDB database
+const fetchHistoricalTransactions = async () => {
+    // Assuming a Mongoose model named Transaction
+    const transactions = await transactionhistory_1.default.find({}); // Modify the query as needed
+    return transactions;
+};
+exports.fetchHistoricalTransactions = fetchHistoricalTransactions;
+const getDynamicSellPercentage = async (marketData) => {
+    try {
+        // Fetch market data from the API
+        const marketData = await (0, exports.fetchMarketData)();
+        // Extract relevant parameters from market data
+        const currentPrice = marketData.currentPrice; // Current price
+        const marketCap = marketData.marketCap; // Market capitalization
+        const priceChangePercentage = marketData.priceChangePercentage; // Price change percentage over the last 24 hours
+        const circulatingSupply = marketData.circulatingSupply; // Circulating supply
+        let sellPercentage;
+        // Example logic to determine sell percentage based on market conditions
+        if (priceChangePercentage > 5) { // If price has increased more than 5%
+            sellPercentage = 70; // More aggressive selling
+        }
+        else if (currentPrice < (marketCap / circulatingSupply) * 0.9) { // If current price is significantly lower than fair value
+            sellPercentage = 30; // Less aggressive selling
+        }
+        else if (priceChangePercentage < -5) { // If price has decreased more than 5%
+            sellPercentage = 40; // Conservative selling
+        }
+        else {
+            sellPercentage = 50; // Default percentage
+        }
+        return sellPercentage;
+    }
+    catch (error) {
+        console.error("Error fetching market data:", error);
+        return 50; // Default percentage in case of an error
+    }
+};
+exports.getDynamicSellPercentage = getDynamicSellPercentage;
+// Example function to fetch market data
+const fetchMarketData = async () => {
+    const response = await axios_1.default.get('https://api.coingecko.com/api/v3/coins/markets', {
+        params: {
+            vs_currency: 'usd', // Specify the currency
+            order: 'market_cap_desc', // Sort by market cap
+            per_page: 10, // Number of results per page
+            page: 1, // Page number
+        }
     });
+    // Hypothetical response structure
+    return {
+        id: response.data.id, // Example: 'solana'
+        name: response.data.name, // Example: 'Solana'
+        currentPrice: response.data.current_price, // Example: 147.28
+        marketCap: response.data.market_cap, // Example: 69096423046
+        priceChangePercentage: response.data.price_change_percentage_24h, // Example: 2.44729
+        circulatingSupply: response.data.circulating_supply // Example: 469269835.061705
+    };
+};
+exports.fetchMarketData = fetchMarketData;
+// Function to Fetch historical prices 
+async function fetchHistoricalPrices(tokenSymbol, period) {
+    try {
+        // Query the HistoricalData collection for the given tokenSymbol
+        // Sort by timestamp in descending order (most recent first)
+        const historicalData = await historicaldata_1.default.find({ tokenSymbol })
+            .sort({ timestamp: -1 }) // Sort by newest data first
+            .limit(period) // Limit to the number of periods (e.g., 50)
+            .select('priceAtBuy') // Only select the priceAtBuy field
+            .exec();
+        // Map the result to extract the priceAtBuy into an array
+        const prices = historicalData.map(data => data.priceAtBuy);
+        // Return the array of prices
+        return prices;
+    }
+    catch (error) {
+        console.error(`Error fetching historical prices for ${tokenSymbol}:`, error);
+        throw new Error("Failed to fetch historical prices.");
+    }
+}
+//function to store historical prices 
+const historicalprices_1 = require("../models/historicalprices");
+async function storeHistoricalPrices(tokenAddress, prices) {
+    try {
+        // Here, you would typically interact with your database to store the prices.
+        // This is a mock implementation. Replace it with your actual database logic.
+        const historicalData = {
+            tokenAddress,
+            prices,
+            timestamp: new Date().toISOString(), // Add a timestamp for reference
+        };
+        // Example: storing the data in a database
+        await historicalprices_1.HistoricalPrice.collection('historicalPrices').insertOne(historicalData); // Adjust based on your DB structure
+        console.log(`Historical prices for ${tokenAddress} stored successfully.`);
+    }
+    catch (error) {
+        console.error(`Error storing historical prices for ${tokenAddress}: ${error.message}`);
+        throw error;
+    }
+}
+//Function to fetch the market context at the time of the transaction 
+const profitConfig_2 = require("../config/profitConfig");
+// This function fetches current market prices and other details from multiple DEXs for the token pair.
+async function getMarketContext(tokenSymbol) {
+    try {
+        const tokenAddress = profitConfig_2.TOKEN_DETAILS[tokenSymbol];
+        if (!tokenAddress) {
+            throw new Error(`Token address for ${tokenSymbol} not found.`);
+        }
+        // Fetch current market data from CoinGecko
+        const { price, liquidity, volumes, fees } = await getPricesAndMarketDataFromDEXs(tokenAddress);
+        if (!price) {
+            throw new Error(`No price found for ${tokenSymbol}`);
+        }
+        const period = 10;
+        // Fetch historical price data for trend analysis (e.g., last 7 days)
+        const historicalPrices = await fetchHistoricalPrices(tokenSymbol, period); // Function to fetch historical data
+        const bestPrice = Math.max(...historicalPrices);
+        const worstPrice = Math.min(...historicalPrices);
+        const averagePrice = historicalPrices.reduce((sum, p) => sum + p, 0) / historicalPrices.length;
+        const volatility = (bestPrice - worstPrice) / bestPrice; // Volatility percentage
+        const trend = price > averagePrice ? 'uptrend' : 'downtrend'; // Compare current price with average
+        // Set thresholds for arbitrage based on price differences and fees
+        const arbitrageOpportunity = price > worstPrice * 1.05 && fees < 0.03; // Arbitrage logic
+        const timestamp = new Date().toISOString();
+        logger_1.logger.info(`Market context for ${tokenSymbol}: Current Price = ${price}, Best Price = ${bestPrice}, Worst Price = ${worstPrice}`);
+        return {
+            tokenAddress,
+            currentPrice: price,
+            bestPrice,
+            worstPrice,
+            averagePrice,
+            spread: bestPrice - worstPrice,
+            arbitrageOpportunity,
+            liquidity,
+            volumes,
+            fees,
+            volatility,
+            trend,
+            historicalPrices,
+            timestamp,
+        };
+    }
+    catch (error) {
+        logger_1.logger.error(`Error getting market context for ${tokenSymbol}: ${error.message}`);
+        throw error;
+    }
+}
+//Function to get prices from different DEXs and Token Data 
+async function getPricesAndMarketDataFromDEXs(tokenAddress) {
+    try {
+        const dexAPI = `https://api.coingecko.com/api/v3/coins/solana/contract/${tokenAddress}`;
+        const response = await axios_1.default.get(dexAPI);
+        const { market_data } = response.data;
+        return {
+            price: market_data.current_price.usd,
+            liquidity: market_data.total_volume.usd, // Treating total volume as liquidity
+            volumes: market_data.total_volume.usd, // Using the same value for trading volume
+            fees: 0.02, // Default fee placeholder (you may adjust this as needed)
+        };
+    }
+    catch (error) {
+        console.error("Error fetching market data from CoinGecko:", error);
+        throw new Error("Failed to retrieve market data");
+    }
+}
+//function to get relevant token data for rugchecks 
+const node_fetch_1 = __importDefault(require("node-fetch")); // Import fetch for making API calls
+async function fetchTokenData(tokenAddress) {
+    try {
+        const DEX_API_URL = `https://api.coingecko.com/api/v3/coins/solana/contract`;
+        const url = `${DEX_API_URL}/${tokenAddress}`;
+        const response = await axios_1.default.get(url); // Use axios for error handling features
+        if (!response.data) {
+            throw new Error(`Error fetching token data for ${tokenAddress}`);
+        }
+        const tokenData = response.data;
+        if (!tokenData.id) {
+            throw new Error(`Token data not found for ${tokenAddress}`);
+        }
+        return tokenData;
+    }
+    catch (error) {
+        console.error(`Error fetching token data for ${tokenAddress}:`, error);
+        return null;
+    }
+}
+//Function to update classification "
+// Importing necessary wallet schemas
+const fishwallets_1 = __importDefault(require("../models/fishwallets")); // Import FishWallet schema
+const whalewallets_1 = __importDefault(require("../models/whalewallets")); // Import WhaleWallet schema
+const dolphinwallets_1 = __importDefault(require("../models/dolphinwallets")); // Import DolphinWallet schema
+const shrimpwallets_1 = __importDefault(require("../models/shrimpwallets")); // Import ShrimpWallet schema
+const planktonwallets_1 = __importDefault(require("../models/planktonwallets")); // Import PlanktonWallet schema
+const turtlewallets_1 = __importDefault(require("../models/turtlewallets")); // Import TurtleWallet schema
+const historicaldata_1 = __importDefault(require("../models/historicaldata"));
+// Map of schemas for easy access
+const walletSchemas = {
+    Fish: fishwallets_1.default,
+    Whale: whalewallets_1.default,
+    Dolphin: dolphinwallets_1.default,
+    Shrimp: shrimpwallets_1.default,
+    Plankton: planktonwallets_1.default,
+    Turtle: turtlewallets_1.default,
+};
+// Function to move a wallet to a new schema
+const moveWalletToNewSchema = async (existingWallet, newClassification) => {
+    if (!existingWallet || !newClassification) {
+        console.log('Invalid parameters for moving wallet schema.');
+        return;
+    }
+    try {
+        // Extract the wallet's classification
+        const currentClassification = existingWallet.classification.split(' - ')[0];
+        // Determine the model/schema for the current and new classifications
+        const currentWalletModel = walletSchemas[currentClassification];
+        const newWalletModel = walletSchemas[newClassification.split(' - ')[0]];
+        if (!currentWalletModel || !newWalletModel) {
+            console.log(`Unknown wallet schemas for classification types: ${currentClassification}, ${newClassification}`);
+            return;
+        }
+        // Step 1: Delete the wallet from the current schema
+        await currentWalletModel.destroy({ where: { walletAddress: existingWallet.walletAddress } });
+        console.log(`Wallet ${existingWallet.walletAddress} removed from ${currentClassification} schema.`);
+        // Step 2: Add the wallet to the new schema with all its existing data
+        const newWalletData = {
+            walletAddress: existingWallet.walletAddress,
+            tokenBalance: existingWallet.tokenBalance,
+            lastTradeDate: existingWallet.lastTradeDate,
+            transactionHistory: existingWallet.transactionHistory,
+        };
+        await newWalletModel.create(newWalletData);
+        console.log(`Wallet ${existingWallet.walletAddress} moved to ${newClassification} schema.`);
+    }
+    catch (error) {
+        console.error(`Error moving wallet to new schema: ${error.message}`);
+    }
+};
+exports.moveWalletToNewSchema = moveWalletToNewSchema;
+//Function to record buyBehaviour of that wallet
+async function recordBuyBehavior(data) {
+    const { walletAddress, tokenAddress, tokenValue, // This will be used as tokenAmount in the schema
+    solAmount, // You need to pass the SOL amount separately to match the schema
+    priceAtPurchase, // This needs to be passed to the function
+    transactionSignature, marketContext, } = data;
+    // Insert into the BuyBehavior schema
+    await BuyBehavior.create({
+        walletAddress,
+        tokenAddress,
+        tokenAmount: tokenValue, // Rename tokenValue to tokenAmount
+        solAmount, // Include the SOL amount
+        priceAtPurchase, // Include the price at purchase
+        // Market context
+        marketContext: {
+            bestPrice: marketContext.bestPrice,
+            worstPrice: marketContext.worstPrice,
+            averagePrice: marketContext.averagePrice,
+            spread: marketContext.spread,
+            liquidity: marketContext.liquidity,
+            volumes: marketContext.volumes,
+            fees: marketContext.fees,
+            volatility: marketContext.volatility,
+            trend: marketContext.trend,
+            historicalPrices: marketContext.historicalPrices, // Storing historical prices
+            timestamp: new Date().toISOString(),
+        },
+        timestamp: new Date().toISOString(), // Store the transaction timestamp
+    });
+}
+// Function to record sell behavior
+async function recordSellBehavior(data) {
+    const { walletAddress, tokenAddress, tokenSymbol, // Added token symbol for clarity
+    tokenValue, // This will be used as tokenAmount in the schema
+    solAmount, // You need to pass the SOL amount separately to match the schema
+    priceAtSale, // Include the price at sale
+    transactionSignature, marketContext, } = data;
+    // Insert into the sellBehavior schema
+    await SellBehavior.create({
+        walletAddress,
+        tokenAddress,
+        tokenSymbol,
+        tokenAmount: tokenValue, // Rename tokenValue to tokenAmount
+        solAmount, // Include the SOL amount
+        priceAtSale, // Include the price at sale
+        // Market context
+        marketContext: {
+            bestPrice: marketContext.bestPrice,
+            worstPrice: marketContext.worstPrice,
+            averagePrice: marketContext.averagePrice,
+            spread: marketContext.spread,
+            liquidity: marketContext.liquidity,
+            volumes: marketContext.volumes,
+            fees: marketContext.fees,
+            volatility: marketContext.volatility,
+            trend: marketContext.trend,
+            historicalPrices: marketContext.historicalPrices, // Storing historical prices
+            timestamp: new Date().toISOString(),
+        },
+        timestamp: new Date().toISOString(), // Store the transaction timestamp
+    });
+}
+async function calculateMovingAverage(tokenSymbol, period) {
+    // Add logic to calculate the moving average from historical data
+    const prices = await fetchHistoricalPrices(tokenSymbol, period);
+    const sum = prices.reduce((acc, price) => acc + price, 0);
+    return sum / prices.length;
 }

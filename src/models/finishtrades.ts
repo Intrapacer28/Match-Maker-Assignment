@@ -7,8 +7,8 @@ interface IFinishTrade extends Document {
     initialAmount: number;
     finalAmount: number;
     profitOrLoss: 'Profit' | 'Loss';
-    openTrade: IOpenTrade;
     description: string;
+    openTrade: IOpenTrade;  // Reference to the OpenTrade
 }
 
 const finishTradeSchema: Schema<IFinishTrade> = new mongoose.Schema({

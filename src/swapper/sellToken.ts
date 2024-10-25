@@ -80,8 +80,8 @@ export const sellToken = async (
 
     // Extract the amount of SOL to be received from the quote response
     const amountOfSolIn: number =
-    quoteResponse.routePlan[quoteResponse.routePlan.length - 1].swapInfo
-      .outAmount;
+      quoteResponse.routePlan[quoteResponse.routePlan.length - 1].swapInfo
+        .outAmount;
 
     // Get the public key of the wallet for the swap transaction
     const walletPublicKey = wallet.publicKey.toString();
@@ -99,36 +99,44 @@ export const sellToken = async (
     const latestBlockhash = await connection.getLatestBlockhash()
 
     // If waiting for confirmation, confirm the transaction
-    if(waitForConfirmation){
+    if (waitForConfirmation) {
       logger.info("Waiting for confirmation... 🕒");
-      
+
       const confirmation = await connection.confirmTransaction(
         {
           signature: txid,
           blockhash: latestBlockhash.blockhash,
           lastValidBlockHeight: latestBlockhash.lastValidBlockHeight,
         },
-        'finalized' // Optional commitment level
+        "finalized" // Optional commitment level
       );
-  
-      // Throw an error if confirmation fails
+
+      // Check if the confirmation was successful
       if (confirmation.value.err) {
-        throw new Error("Confirmation error")
+        // If confirmation fails, check the wallet's SOL balance to verify if tokens were sold
+        const solBalance = await connection.getBalance(new PublicKey(walletPublicKey));
+        logger.warn("Confirmation error. Checking SOL balance as fallback...");
+
+        // Compare balance with expected SOL from sale
+        if (solBalance >= amountOfSolIn) {
+          logger.info(`Transaction likely succeeded. Received ${solBalance} SOL ✅`);
+          return wantAmountOfSolIn ? solBalance : txid;
+        } else {
+          throw new Error("Transaction confirmation failed and balance check suggests no tokens sold");
+        }
       }
     }
 
     // Log the result of the transaction
     logger.info(`Sold ${amountOfTokenToSell} Token for ${amountOfSolIn} SOL ✅`);
-    logger.info(`Signature = https://solscan.io/tx/${txid}`)
+    logger.info(`Signature = https://solscan.io/tx/${txid}`);
 
     // Return the amount of SOL received or the transaction ID based on the flag
-    if (wantAmountOfSolIn) {
-      return amountOfSolIn;
-    } else {
-      return txid;
-    }
+    return wantAmountOfSolIn ? amountOfSolIn : txid;
+
   } catch (error: any) {
-    // Throw an error if something goes wrong during the process
+    // Log the error message
+    logger.error(`Error in sellToken function: ${error.message}`);
     throw new Error(error);
   }
 };

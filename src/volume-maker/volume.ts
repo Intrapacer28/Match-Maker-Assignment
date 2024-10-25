@@ -1,9 +1,11 @@
 import "dotenv/config";
 import { Keypair, LAMPORTS_PER_SOL, PublicKey, Connection, clusterApiUrl } from "@solana/web3.js";
 import base58 from "bs58";
-import { getOrCreateAssociatedTokenAccount } from "@solana/spl-token";
+import { getOrCreateAssociatedTokenAccount, TokenAccountNotFoundError, TokenInvalidAccountOwnerError, TokenInvalidAccountSizeError } from "@solana/spl-token";
 import { buy, distributeSol, sell } from "../utils/volumeUtils";
 import { delay, getSolanaBalance } from "../utils/utils";
+
+
 import {
   ADDITIONAL_FEE,
   BUY_AMOUNT,
@@ -16,9 +18,9 @@ import {
   TOKEN_MINT,
   TOTAL_TRANSACTION,
 } from "../config/volumeConfig";
+//Intialialize connection 
+const connection = new Connection(clusterApiUrl("testnet"));
 
-// Initialize connection
-const connection = new Connection(clusterApiUrl("mainnet-beta")); 
 
 const main = async () => {
   // Load main wallet's secret key from environment variables
@@ -34,13 +36,16 @@ const main = async () => {
   }
   const mainWalletKeypair = Keypair.fromSecretKey(privateKeyBytes);
 
-  const solBalance = (await getSolanaBalance(mainWalletKeypair.publicKey.toString())) / LAMPORTS_PER_SOL;
+  const solBalance = await getSolanaBalance(mainWalletKeypair.publicKey.toString());
+  
+
+
   const baseMint = new PublicKey(TOKEN_MINT);
 
   console.log(`Volume bot is running`);
   console.log(`Wallet address: ${mainWalletKeypair.publicKey.toBase58()}`);
   console.log(`Pool token mint: ${baseMint.toBase58()}`);
-  console.log(`Wallet SOL balance: ${solBalance.toFixed(3)} SOL`);
+  console.log(`Wallet SOL balance: ${solBalance} SOL`);
   console.log(`Distribute SOL to ${DISTRIBUTION_NUM} wallets`);
 
   if (TOTAL_TRANSACTION % 2 !== 0) {
@@ -65,13 +70,14 @@ const main = async () => {
 
   // Create SPL token accounts for each child wallet
   for (const { kp } of data) {
-    const tokenAccount = await getOrCreateAssociatedTokenAccount(
-      connection,
-      mainWalletKeypair,
-      baseMint,
-      kp.publicKey
-    );
-    console.log(`SPL Token Account created for ${kp.publicKey.toBase58()}: ${tokenAccount.address.toBase58()}`);
+   
+      const tokenAccount = await getOrCreateAssociatedTokenAccount(
+          connection,
+          mainWalletKeypair,
+          baseMint,
+          kp.publicKey
+      );    
+      console.log(`SPL Token Account created for ${kp.publicKey.toBase58()}: ${tokenAccount.address.toBase58()}`);
   }
 
   // Proceed with the rest of the script (buy/sell logic)

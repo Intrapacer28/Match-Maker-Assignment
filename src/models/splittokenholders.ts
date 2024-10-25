@@ -2,7 +2,7 @@ import mongoose, { Document, Model, Schema } from 'mongoose';
 
 interface ISplitTokenHolder extends Document {
     walletAddress: string;
-    tokenAddress: string;
+    tokenSymbol: string;
     tokenTransferred: number;
     signature: string;
 }
@@ -13,9 +13,9 @@ const splitTokenHolderSchema: Schema<ISplitTokenHolder> = new mongoose.Schema({
         unique: true,
         required: true
     },
-    tokenAddress: {
+    tokenSymbol: {
         type: String,
-        required: true
+        required: false
     },
     tokenTransferred: {
         type: Number,

@@ -1,118 +1,101 @@
 // Import necessary modules from Solana web3 library
 import { Connection, Keypair } from "@solana/web3.js";
-// Import Wallet class from Anchor library for wallet management
 import { Wallet } from "@project-serum/anchor";
-// Import environment variables
 import "dotenv/config";
-// Import constant for the SOLANA address
 import { SOLANA_ADDRESS } from "../config/consts";
-// Import helper functions for swap transactions
 import {
   convertToInteger,
   getQuote,
   getSwapTransaction,
   finalizeTransaction,
 } from "./swapperHelper";
-// Import logger for logging messages
 import { logger } from "../utils/logger";
+import { getBalanceOfToken } from "../utils/utils";
 
-// Function to handle the process of buying a token
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
 export const buyToken = async (
-  primaryWallet: Keypair, // Keypair object representing the wallet to use for the transaction
-  addressOfTokenIn: string, // Address of the token to be bought
-  amountOfTokenOut: number, // Amount of SOL to be used for buying the token
-  waitForConfirmation: boolean, // Flag indicating whether to wait for transaction confirmation
-  wantAmountOfTokenIn: boolean // Flag indicating whether to return the amount of token bought or transaction ID
+  primaryWallet: Keypair,
+  addressOfTokenIn: string,
+  amountOfTokenOut: number,
+  waitForConfirmation: boolean,
+  wantAmountOfTokenIn: boolean
 ): Promise<number | string> => {
   try {
-    // Extract environment variables
     const rpcUrl = process.env.RPC_URL;
     const wsEndpoint = process.env.RPC_WEBSOCKET_ENDPOINT;
 
-    // Check if environment variables are defined
     if (!rpcUrl || !wsEndpoint) {
-      throw new Error('RPC_URL or RPC_WEBSOCKET_ENDPOINT environment variable is not set.');
+      throw new Error("RPC_URL or RPC_WEBSOCKET_ENDPOINT environment variable is not set.");
     }
 
-    // Create a connection to the Solana blockchain
-    const connection = new Connection(rpcUrl, {
-      wsEndpoint: wsEndpoint,
-    });
-
-    // Create a Wallet instance using the provided Keypair
+    const connection = new Connection(rpcUrl, { wsEndpoint: wsEndpoint });
     const wallet = new Wallet(primaryWallet);
-
-    // Log the initiation of the token purchase
+    const walletPublicKey = wallet.publicKey.toString();
     logger.info(`Trying to buy token using ${amountOfTokenOut} SOL...🚀`);
 
-    // Define the number of decimal places for SOL (usually 9 for SOL)
-    const decimals = 9; // Decimal places depend on the input token address (SOL in this case)
-    // Define slippage percentage (in basis points, 100 bps = 1%)
-    const slippage = 100; // slippage is 1%
+    const initialTokenBalance = await getBalanceOfToken(walletPublicKey, addressOfTokenIn);
 
-  
-    const convertedAmountOfTokenOut = convertToInteger(
-      amountOfTokenOut,
-      decimals
-    );
+    const decimals = 9;
+    const slippage = 100;
+    const convertedAmountOfTokenOut = convertToInteger(amountOfTokenOut, decimals);
 
-   
-    const quoteResponse = await getQuote(
-      SOLANA_ADDRESS, // Address of SOL (the token being used to buy)
-      addressOfTokenIn, // Address of the token to be bought
-      convertedAmountOfTokenOut, // Amount of SOL to be used for buying
-      slippage // Slippage percentage
-    );
+    const quoteResponse = await getQuote(SOLANA_ADDRESS, addressOfTokenIn, convertedAmountOfTokenOut, slippage);
+    const amountOfTokenIn = quoteResponse.routePlan[quoteResponse.routePlan.length - 1].swapInfo.outAmount;
 
-    // Extract the amount of the token to be bought from the quote response
-    const amountOfTokenIn: number =
-      quoteResponse.routePlan[quoteResponse.routePlan.length - 1].swapInfo
-        .outAmount;
-
-    // Get the public key of the wallet
-    const walletPublicKey = wallet.publicKey.toString();
-    // Get the swap transaction details using the quote response and wallet public key
-    const swapTransaction = await getSwapTransaction(
-      quoteResponse,
-      walletPublicKey
-    );
-
-    // Finalize the transaction by sending it to the Solana blockchain
+    const swapTransaction = await getSwapTransaction(quoteResponse, walletPublicKey);
     const txid = await finalizeTransaction(swapTransaction, wallet, connection) as string;
-  
-    // If waiting for confirmation, log the status and confirm the transaction
+
+    if (!txid) {
+      throw new Error("Transaction ID is undefined. Transaction may have failed.");
+    }
+
     if (waitForConfirmation) {
       logger.info("Waiting for confirmation... 🕒");
-      // Get the latest blockhash from the Solana blockchain
+
       const latestBlockhash = await connection.getLatestBlockhash();
-      // Confirm the transaction using the latest blockhash and transaction ID
-      const confirmation = await connection.confirmTransaction(
-        {
-          signature: txid, // Transaction ID
-          blockhash: latestBlockhash.blockhash, // Latest blockhash
-          lastValidBlockHeight: latestBlockhash.lastValidBlockHeight, // Last valid block height
-        },
-        'finalized' // Commitment level for confirmation
-      );
-  
-      // Throw an error if the confirmation response contains an error
-      if (confirmation.value.err) {
-        throw new Error("Confirmation error");
+      let confirmed = false;
+      const retries = 5;
+      const baseDelay = 1000;
+
+      for (let i = 0; i < retries; i++) {
+        try {
+          // Try to confirm the transaction first
+          await connection.confirmTransaction(
+            {
+              signature: txid,
+              blockhash: latestBlockhash.blockhash,
+              lastValidBlockHeight: latestBlockhash.lastValidBlockHeight,
+            },
+            "finalized"
+          );
+          confirmed = true; // Confirmation succeeded
+          break; // Exit the loop if confirmation is successful
+        } catch (error) {
+          // If confirmation fails, check the balance
+          const latestBalance = await getBalanceOfToken(walletPublicKey, addressOfTokenIn);
+
+          // Check if the balance has increased, indicating successful buy
+          if (latestBalance > initialTokenBalance) {
+            confirmed = true; // Successful balance check
+            break; // Exit the loop
+          }
+
+          const delay = baseDelay * Math.pow(2, i); // Exponential backoff
+          logger.warn(`Confirmation failed. Retrying in ${delay / 1000} seconds...`);
+          await sleep(delay); // Wait before retrying
+        }
+      }
+
+      if (!confirmed) {
+        throw new Error("Transaction confirmation failed, or token balance didn't update.");
       }
     }
 
-    // Log the transaction signature URL for reference
-    logger.info(`Signature = https://solscan.io/tx/${txid}`);
-
-    // Return the amount of the token bought or the transaction ID based on the flag
-    if (wantAmountOfTokenIn) {
-      return amountOfTokenIn;
-    } else {
-      return txid;
-    }
+    logger.info(`Transaction successful. Signature: https://solscan.io/tx/${txid}`);
+    return wantAmountOfTokenIn ? amountOfTokenIn : txid;
   } catch (error: any) {
-    // Throw an error if any exception occurs during the process
+    logger.error(`Error in buyToken: ${error.message}`);
     throw new Error(error.message);
   }
 };
-

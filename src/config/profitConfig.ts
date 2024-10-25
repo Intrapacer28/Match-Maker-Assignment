@@ -1,7 +1,7 @@
-export const MIN_TOKEN_AMOUNT = 1 // write in USDC 
-export const MIN_SOL_BALANCE = 10 // write in sol
-export const MIN_SOL_BALANCE_EXCLUSIVE = 5 //minimum sol balance for exclusive holder
-export const MIN_TOKEN_AMOUNT_EXCLUSIVE = 500 //minimum sol balance for exclusive holder //in USDC
+export const MIN_TOKEN_AMOUNT = 100 // write in USDC 
+export const MIN_SOL_BALANCE = 0.5 // write in sol
+export const MIN_SOL_BALANCE_EXCLUSIVE = 0.5 //minimum sol balance for exclusive holder
+export const MIN_TOKEN_AMOUNT_EXCLUSIVE = 100 //minimum sol balance for exclusive holder //in USDC
 export const AUTO_SELL = true // true for making auto sell feature
 export const ENABLE_AUTO_SELL_PROFIT = true;  // true for making auto sell feature for limit profit
 export const ENABLE_AUTO_SELL_LOSS = true;  // true for making auto sell feature for limit loss
@@ -26,9 +26,16 @@ export const MIN_TOKEN_DIFFERENCE_TO_SELL_USDC = 100; // in USDC how much he hav
 
 
 // write symbol & token address in same a object
-export const TOKEN_DETAILS = {
-    'wsb': "7HEVaZMbunuFapQSgJKy18aA8sXd9HWoa1PjuNYVwXbH",
-    'r/snoofi' : "7M9KJcPNC65ShLDmJmTNhVFcuY95Y1VMeYngKgt67D1t" ,
-    'vibes' :    "Ed1yisBEAo8UXToSswvVFgzyJKpF48HEdq5kvz2zpump" ,
-    'SOLEX' :    "3ceMC8r66WzTFGunkUckoKAbYMXWfzXsgWwmXSYY4x6L"
+export const TOKEN_DETAILS = { 
+    // 'TAofU': "FnQMnE5aC59t3obZK1qfDKHVYKtU2tCPHN63ovuypump",
+    'CzLSujWBLFsSjncfkh59rUFqvafWcY5tzedWJSuypump' : "CzLSujWBLFsSjncfkh59rUFqvafWcY5tzedWJSuypump",
+    // 'r/snoofi' : "7M9KJcPNC65ShLDmJmTNhVFcuY95Y1VMeYngKgt67D1t",
+    // 'WLF' : "vaBHTJ4SF4g4LKVF63cywvbxToZqicGhNcW3Mggpump",
+    // 'Whispy': "EEBA6E69rhvGgLSs633u5qVeNjo77fp2wY3yj8Aipump",
+    // 'MATRIX' : "B8rewgn27navW3tBXuzErWPBHEb8gKZhrGkx7NuUpump",
+    // 'ACT' : "GJAFwWjJ3vnTsrQVabjBVK2TYB1YtRCQXRDfDgUnpump",
+    // 'HUMANITY' : "6ipq59qkwJVECtYBwe4qfz3NprvQ5FtQY7THvXWFpump",
+    // 'LOGIC' : "J7Cf3uxG8nW76VfUiRrRkM1oy3Adm4obtpM7hd6opump",
+
 }
+ 

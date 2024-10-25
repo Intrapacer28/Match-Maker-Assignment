@@ -50,7 +50,7 @@ app.post('/webhook', async (req, res) => {
             const tokenToSell = (randomPercentage / 100) * result.tokenValue;
 
             // Limit sell amount based on liquidity
-            const adjustedSellAmount = Math.min(tokenToSell, liquidity * 0.1); // Adjust limit as needed
+            const adjustedSellAmount = Math.min(tokenToSell, liquidity * 0.1); 
             console.log("Adjusted SELL TOKEN", adjustedSellAmount);
 
            
@@ -69,7 +69,7 @@ app.post('/webhook', async (req, res) => {
             const tokenToBuy = ((randomPercentage / 100) * result.tokenValue) / priceData?.data?.SOL?.price;
 
             // Limit buy amount based on liquidity
-            const adjustedBuyAmount = Math.min(tokenToBuy, liquidity * 0.1); // Adjust limit as needed
+            const adjustedBuyAmount = Math.min(tokenToBuy, liquidity * 0.1); 
             console.log("Adjusted BUY TOKEN", adjustedBuyAmount);
 
           

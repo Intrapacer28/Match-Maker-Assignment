@@ -1,1 +1,1 @@
-export const EXECUTE_SWAP = false ; //false for simulating transactions
+export const EXECUTE_SWAP = true; //false for simulating transactions

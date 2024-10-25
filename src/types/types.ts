@@ -5,19 +5,22 @@ export interface GetTokenAccountsParams {
 }
 
 export interface IOpenTrade {
-  walletAddress: string;
-  solBalance: number;
-  tokenBalance: number;
-  tokenAddress: string;
-  openTradeType: 'BUY' | 'SELL';
-  tokenAmount: number;
-  solAmount: number;
-  timeStamp: number,
-  tokenDecimal : number,
-  tokenPrice : number,
-  createdAt?: Date;
-  updatedAt?: Date;
+  walletAddress: string;   // Make sure this is defined
+  solBalance: number;      // Make sure this is defined
+  tokenBalance: number;    // Make sure this is defined
+  tokenAddress: string;     // Make sure this is defined
+  openTradeType: 'BUY' | 'SELL';  // This should be part of the interface
+  tokenAmount: number;     // Make sure this is defined
+  solAmount: number;       // Make sure this is defined
+  timeStamp: number;       // Make sure this is defined
+  tokenPrice: number;      // Make sure this is defined
+  tokenDecimal: number;    // Make sure this is defined
+  amountTraded?: number;   // Optional: adjust based on your schema
+  entryTime?: Date;        // Optional: adjust based on your schema
+  exitTime?: Date;         // Optional: adjust based on your schema
+  classification: string;   // This should also be defined
 }
+
 
 export interface ExclusiveHolder {
   walletAddress: string;
@@ -119,4 +122,26 @@ export interface Data {
 export interface Blockhash {
   blockhash: string;
   lastValidBlockHeight: number;
+}
+
+export interface TokenData {
+  id: string;
+  developer_data?: {
+    forks: number;
+    stars: number;
+    subscribers: number;
+    total_issues: number;
+    closed_issues: number;
+    pull_requests_merged: number;
+    pull_request_contributors: number;   
+
+    commit_count_4_weeks: number;   
+
+  };
+  sentiment_votes_up_percentage?: number;
+  sentiment_votes_down_percentage?: number;
+  market_cap_fdv_ratio?: number;
+  total_supply?: number;
+  max_supply?: number;
+  circulating_supply?: number;
 }

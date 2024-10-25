@@ -1,6 +1,6 @@
-export const DISTRIBUTION_AMOUNT = 0.01;
-export const DISTRIBUTION_NUM = 10;
-export const TOKEN_MINT = "9hjZ8UTNrNWt3YUTHVpvzdQjNbp64NbKSDsbLqKR6BZc"
+export const DISTRIBUTION_AMOUNT = 0.04;
+export const DISTRIBUTION_NUM = 5;
+export const TOKEN_MINT = "6WNva7iLjTvxSfXPSmbjceW5Yc41LUH4SJNqKom5pump"
 export const ADDITIONAL_FEE = 0.005;
 export const BUY_AMOUNT = 0.01 ;
 export const BUY_UPPER_AMOUNT = 0.002;

@@ -1,35 +1,19 @@
-import { Wallet } from "@project-serum/anchor";
-import { createCloseAccountInstruction } from "@solana/spl-token";
-import { Keypair, TransactionMessage, VersionedTransaction } from "@solana/web3.js";
+import * as fs from 'fs';
+import { Keypair } from '@solana/web3.js';
+import * as bs58 from 'bs58';  // Change to namespace import
 
-let i = 0;
-let genwallets = [];
-const transactionIns = [];
+// Define your file path
+const filePath = "C:\\Users\\1234p\\Videos\\Blockchain-Project\\marketmaker-main\\marketmaker-main\\src\\volume-maker\\~\\my_testnet_wallet.json";
 
-while(i<5){
-    const wallets = Keypair.generate();
-    genwallets.push(wallets)
-    i++;
-    transactionIns.push(createCloseAccountInstruction(account, destination, authorityPublicKey, multiSigners, programId))
+// Read the JSON file
+const jsonData = fs.readFileSync(filePath, 'utf-8');
+const keypairData = JSON.parse(jsonData);
 
+// Extract the private key array
+const privateKeyArray = Uint8Array.from(keypairData);
 
-}
+// Convert the private key array to Base58
+const base58PrivateKey = bs58.encode(privateKeyArray);
 
-const {blockhash} = await connection.getLatestBlockhash()
-
-const message = new TransactionMessage({
-    payerKey: Wallet,
-    recentBlockhash: blockhash,
-    instructions: transactionIns,
-
-}).compileToV0Message()
-
-const transactionnn = new VersionedTransaction(message);
-
-
-
-
-
-
-
-
+// Log the Base58 private key
+console.log('Base58 Private Key:', base58PrivateKey);

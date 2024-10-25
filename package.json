@@ -4,12 +4,14 @@
   "description": "Solana Trading Bot",
   "main": "index.js",
   "scripts": {
+    "build": "tsc",
     "profit": "ts-node ./src/profit/server.ts",
     "monitor-solbalance": "node --expose-gc -r ts-node/register ./src/profit/monitorSolBalances.ts",
     "monitor-opentrade": "node --expose-gc -r ts-node/register ./src/profit/monitorTokenPurchase.ts",
-    "volume": "ts-node ./src/volume-maker/volume.ts"
+    "volume": "tsx ./src/volume-maker/volume.ts",
+    "dev": "nodemon ./src/profit/server.ts"
   },
-  "author": "Mukul",
+  "author": "Pranav",
   "license": "MIT",
   "dependencies": {
     "@coral-xyz/anchor": "^0.29.0",
@@ -24,15 +26,18 @@
     "@solana/web3.js": "^1.95.0",
     "@triton-one/yellowstone-grpc": "^0.4.0",
     "axios": "^1.7.2",
+    "brain.js": "^2.0.0-beta.24",
     "bs58": "^5.0.0",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
     "fs": "^0.0.1-security",
     "helius-sdk": "^1.0.15",
     "lodash": "^4.17.21",
+    "ml-random-forest": "^2.1.0",
     "mongoose": "^8.5.2",
     "node-cron": "^3.0.3",
     "puppeteer": "^23.0.2",
+    "reinforce-js": "^1.5.1",
     "robotjs": "^0.6.0",
     "websocket": "^1.0.35",
     "winston": "^3.14.2"
@@ -42,6 +47,7 @@
     "@types/node": "^20.11.30",
     "ts-node": "^10.9.2",
     "tsx": "^4.7.1",
-    "typescript": "^5.4.5"
+    "typescript": "^5.6.2",
+    "nodemon": "^3.0.1"
   }
 }

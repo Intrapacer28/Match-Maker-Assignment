@@ -97,6 +97,8 @@ export const finalizeTransaction = async (
       });
 
       // Return the transaction ID
+      console.log(`txid is ${txid}`)
+      
       return txid;
     }else{
       // If not executing swap, simulate the transaction

@@ -58,7 +58,6 @@ async function fetchExclusiveHolderDetails(): Promise<ExclusiveHolderDetails> {
         return {};
     }
 
-
     const exclusiveHolderDetails: ExclusiveHolderDetails = exclusiveHolders.reduce((acc, holder) => {
         acc[holder.walletAddress] = {
             sol: holder.solBalance,  
@@ -97,7 +96,7 @@ async function processWallet(walletAddresses: string[], exclusiveHolderDetails: 
                 { $set: { solBalance: currentBalance } }  // Update the SOL balance
             );
             continue; 
-        }
+        } 
 
         // If SOL was added, log the addition
         logger.info(`SOL added to wallet ${wallet}: ${balanceDifference.toFixed(4)} SOL ✅`);
